@@ -1,0 +1,96 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Basic global styles */
+body, html, #root, .App {
+  height: 100%;
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+}
+
+.h-screen { height: 100vh; }
+
+/* Light Theme Styles */
+body {
+  background-color: #f7fafc;
+  color: #2d3748;
+}
+
+/* Dark Theme Styles */
+body.dark-theme {
+  background-color: #1a1a1a;
+  color: #e0e0e0;
+}
+
+.dark-theme .bg-gray-800 {
+  background-color: #333;
+}
+
+.dark-theme .bg-gray-100 {
+  background-color: #2b2b2b;
+}
+
+.dark-theme .bg-white {
+  background-color: #3a3a3a;
+}
+
+.dark-theme .text-white {
+  color: #e0e0e0;
+}
+
+.dark-theme .text-gray-500 {
+  color: #a0aec0;
+}
+
+.dark-theme .text-black {
+  color: #ffffff;
+}
+
+/* Styling for chat messages */
+.message-user {
+  background-color: #4299e1; /* Light blue for user messages */
+  color: #ffffff; /* White text */
+}
+
+.message-bot {
+  background-color: #4a5568; /* Dark gray for bot messages */
+  color: #ffffff; /* White text */
+}
+
+.dark-theme .message-user {
+  background-color: #3182ce; /* Slightly darker blue for readability in dark mode */
+}
+
+.dark-theme .message-bot {
+  background-color: #2d3748; /* Dark gray for bot messages */
+}
+
+/* Input and textarea styles */
+.input-field {
+  background-color: #ffffff;
+  color: #2d3748;
+  border: 1px solid #e2e8f0;
+}
+
+.dark-theme .input-field {
+  background-color: #4a4a4a;
+  color: #e0e0e0;
+  border: 1px solid #333;
+}
+
+/* Sidebar text and links */
+.sidebar-link {
+  color: #a0aec0;
+}
+
+.dark-theme .sidebar-link {
+  color: #cbd5e0;
+}
+
