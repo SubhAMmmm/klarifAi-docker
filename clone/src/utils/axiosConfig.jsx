@@ -1,3 +1,8 @@
+
+
+//4.12.2023
+
+//axiosConfig.jsx
 import axios from 'axios';
 
 const axiosInstance = axios.create({
@@ -20,6 +25,7 @@ axiosInstance.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
+
 // Export services
 export const documentService = {
   uploadDocument: (formData) => {
@@ -28,6 +34,16 @@ export const documentService = {
         'Content-Type': 'multipart/form-data' 
       }
     });
+    
+  },
+
+  setActiveDocument: (documentId) => {
+    return axiosInstance.post('/set-active-document/', { document_id: documentId })
+      .then(response => {
+        // Optionally store in localStorage or sessionStorage
+        sessionStorage.setItem('active_document_id', documentId);
+        return response.data;
+      });
   },
 
   getUserDocuments: () => {
@@ -35,13 +51,117 @@ export const documentService = {
   },
 
   getChatHistory: () => {
-    return axiosInstance.get('/chat-history/');
-  }
+    return axiosInstance.get('/chat-history/', {
+      params: {
+        limit: 50,  // Optional: limit number of chats
+        include_messages: true,
+        include_documents: true
+      }
+    });
+  },
+
+  deleteDocument: (documentId) => {
+    return axiosInstance.delete(`/documents/${documentId}/delete/`)
+      .then(response => {
+        console.log("Document deleted:", response.data);
+        return response.data;
+      })
+      .catch(error => {
+        console.error("Failed to delete document:", error.response?.data || error.message);
+        throw error;
+      });
+  },
 };
 
 export const chatService = {
-  sendMessage: (message) => {
-    return axiosInstance.post('/chat/', { message });
+  sendMessage: (data) => {
+    console.log("Sending data to chat service:", data);
+    return axiosInstance.post('/api/chat/', data)
+        .then(response => {
+            console.log("Chat service response:", response.data);
+            return response.data;
+        })
+        .catch(error => {
+            console.error("Full Error Object:", error);
+            console.error("Error Response:", error.response);
+            
+            if (error.response) {
+                // Server responded with an error
+                console.error('Error Status:', error.response.status);
+                console.error('Error Data:', error.response.data);
+                throw error.response.data;
+            } else if (error.request) {
+                // Request made but no response received
+                console.error('No response received:', error.request);
+                throw new Error('No response from server');
+            } else {
+                // Something happened in setting up the request
+                console.error('Error Message:', error.message);
+                throw error;
+            }
+        });
+  },
+  manageConversation: (conversationId, data) => {
+    return axiosInstance.patch(`/conversations/${conversationId}/`, data)
+      .then(response => {
+        console.log("Conversation management response:", response.data);
+        return response.data;
+      })
+      .catch(error => {
+        console.error("Conversation management error:", error);
+        throw error;
+      });
+  },
+
+  getConversationDetails: (conversationId) => {
+    return axiosInstance.get(`/conversations/${conversationId}/`)
+      .then(response => {
+        console.log("Full Conversation Details:", response.data);
+        
+        // Ensure messages are in the correct format
+        const formattedMessages = (response.data.messages || []).map(msg => ({
+          role: msg.role,
+          content: msg.content,
+          created_at: msg.created_at,
+          citations: msg.citations || []
+        }));
+  
+        return {
+          ...response.data,
+          messages: formattedMessages,
+          conversation_id: conversationId
+        };
+      })
+      .catch(error => {
+        console.error("Failed to fetch conversation details:", error.response?.data || error.message);
+        throw error;
+      });
+  },
+
+  // Add a method to fetch all conversations
+  getAllConversations: () => {
+    return axiosInstance.get('/conversations/')
+      .then(response => {
+        console.log("All Conversations:", response.data);
+        return response.data;
+      })
+      .catch(error => {
+        console.error("Failed to fetch conversations:", error.response?.data || error.message);
+        throw error;
+      });
+  },
+
+  // Optional: Method to delete a conversation
+  deleteConversation: (conversationId) => {
+    return axiosInstance.delete(`/conversations/${conversationId}/delete/`)
+      .then(response => {
+        console.log("Conversation deleted:", response.data);
+        return response.data;
+      })
+      .catch(error => {
+        console.error("Failed to delete conversation:", error.response?.data || error.message);
+        throw error;
+      });
   },
 
   startConversation: (documentId, message) => {
@@ -60,3 +180,6 @@ export const chatService = {
 };
 
 export default axiosInstance;
+
+
+      

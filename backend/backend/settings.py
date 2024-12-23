@@ -76,6 +76,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
             ],
         },
+        
     },
 ]
 
@@ -130,6 +131,7 @@ CORS_ALLOW_HEADERS = [
     'x-requested-with',
 ]
 
+
 # DRF Configuration
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
@@ -140,6 +142,7 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticatedOrReadOnly',
     ],
 }
+
 
 
 # Password validation
@@ -182,3 +185,7 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+# In your settings.py
+LOCAL_SENTENCE_TRANSFORMER_PATH = r'C:\Users\TapasmitaPattanaik\Desktop\ReactClone\backend'

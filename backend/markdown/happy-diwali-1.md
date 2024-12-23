@@ -85,11 +85,11 @@ As Indians have emigrated from the Indian subcontinent, they have taken their cu
 
 ## Vocabulary
 
-| Term        | Part of Speech | Definition                                                                                    |
-|-------------|----------------|-----------------------------------------------------------------------------------------------|
-| accounting  | noun           | management of financial information.                                                          |
+| Term        | Part of Speech | Definition                                                                                     |
+|-------------|----------------|------------------------------------------------------------------------------------------------|
+| accounting  | noun           | management of financial information.                                                           |
 | agriculture | noun           | the art and science of cultivating the land for growing crops (farming) or raising livestock (ranching). |
-| ancient     | adjective      | very old.                                                                                     |
+| ancient     | adjective      | very old.                                                                                      |
 
 4 of 7
 | Term | Part of Speech | Definition |

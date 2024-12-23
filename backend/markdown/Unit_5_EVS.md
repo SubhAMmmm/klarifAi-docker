@@ -23,8 +23,10 @@ In terms of origin it may be natural or anthropogenic (man-made).
 | It is common among coal miners due to the inhalation of carbon particulates which lead to Lung Cancer. |
 
 The document also includes two images:
-1. An image of industrial smokestacks emitting pollution into the air at sunset.
+1. An image of industrial smokestacks emitting pollution into the air at sunset or sunrise.
 2. An image of a polluted beach with a large amount of garbage and debris washed up on the shore.
+
+These images visually represent examples of air pollution and water pollution respectively, reinforcing the textual content of the document.
 # AIR POLLUTION
 
 Degradation of air quality and natural atmospheric condition constitute air pollution. The air pollutant may be a gas or particulate matter.
@@ -40,21 +42,21 @@ Degradation of air quality and natural atmospheric condition constitute air poll
 - It is highly poisonous to most animals. 
 - When inhaled, carbon monoxide reduces the oxygen carrying capacity of blood.
 
-[The document includes three images illustrating different aspects of air pollution:
-1. A power plant with large smokestacks emitting smoke into the sky.
-2. A scene of open burning, with thick black smoke rising from a fire.
-3. Traffic congestion with visible exhaust fumes from vehicles.]
+[The image contains three supporting photographs:
+1. A power plant with large smokestacks emitting smoke
+2. A scene of open burning with thick black smoke
+3. Traffic with visible exhaust fumes]
 # Air pollutants and their effects
 
 ## Hydrocarbons
 Hydrocarbons such as methane, are evolved from soil microbes (methanogens) in flooded rice fields and swamps. They are also generated during the burning of coal and petroleum products.
 
-| Compound | Chemical Formula | Structural Formula |
-|----------|------------------|---------------------|
-| methane  | CH₄              | H-C-H<br>  \|<br>   H |
-| ethane   | C₂H₆             | H H<br>H-C-C-H<br>H H |
-| propane  | C₃H₈             | H H H<br>H-C-C-C-H<br>H H H |
-| butane   | C₄H₁₀            | H H H H<br>H-C-C-C-C-H<br>H H H H |
+| Compound | Formula | Structure |
+|----------|---------|-----------|
+| methane  | CH₄     | H-C-H     |
+| ethane   | C₂H₆    | H-C-C-H   |
+| propane  | C₃H₈    | H-C-C-C-H |
+| butane   | C₄H₁₀   | H-C-C-C-C-H |
 
 ## Sulphur dioxide
 Sulphur dioxide is released from oil refineries and ore smelters which use the sulphur containing fuels. It causes harmful effects on plants and animals. It causes chlorosis (loss of chlorophyll) and necrosis (localised death of tissues). In human, it causes health problems such as asthma, bronchitis and emphysema.
@@ -82,21 +84,21 @@ PAN damages the chlorophyll and thus reduces photosynthesis and growth. It also 
 ## Acid rain
 Gases such as Sulphur di oxide and Nitrogen oxides are oxidized to form sulphuric and nitric acids along with water, and precipitate as acid rain. It damages building materials, plants and animals. It also makes the soil acidic.
 
-| Sculpture affected by acid rain |
-|----------------------------------|
-| [Image shows a stone sculpture that appears to be eroded or damaged, likely due to the effects of acid rain] |
+| Image Description |
+|-------------------|
+| A stone sculpture showing signs of erosion and damage, with the caption "Sculpture affected by acid rain" |
 
 | Effects of Acid Rain |
 |-----------------------|
-| Acid Rain (H2SO4, HNO3) |
-| ↑ |
-| Soil damage, ecosystems → Corrosion of buildings |
-| ↑ |
-| Acidification of Soil → Damage human health |
-| ↑ |
-| Acidification of Rivers & Lakes → Acidification of groundwater (drinking water supply) |
-| ↑ |
-| The weakening of trees and forests → Aquatic flora and fauna die from high acidity of water |
+| ACID RAIN |
+| - Soil damage, ecosystems |
+| - Corrosion of buildings |
+| - Damage human health |
+| - Acidification of groundwater, pollute drinking water supply |
+| - Aquatic flora and fauna die from high acidity of water |
+| - The weakening of trees and insects |
+| - Acidification of Rivers & Lakes |
+| - Acidification of Soil |
 # Control of air pollution
 
 1. The particulates emitted by industries should be controlled by devices such as scrubbers, precipitators and filters.
@@ -116,15 +118,17 @@ Gases such as Sulphur di oxide and Nitrogen oxides are oxidized to form sulphuri
 | FILTRATION LEVEL | SANITATION |
 |------------------|------------|
 | F: Level of respirable particle removal | S: Sanitizes (airborne microbials, virus, molds) |
-| IAQ: Indoor Air Quality | O: Odor/VOC REMOVAL |
-| H: HUMIDITY CONTROL | V: VENTILATION |
+
+| IAQ | HUMIDITY CONTROL | VENTILATION | ODOR/VOC REMOVAL |
+|-----|------------------|-------------|-------------------|
+| Maintains a level between 35 to 50% year round | H: Required fresh air exchange rate | V: Ventilation | O: Amount of Volatile Organic Compounds removed or oxidized |
 
 | Pollution Control Equipment |
 |---------------------------|
 | Control devices for particulate contaminants | Control devices for gaseous contaminants |
-| (a) Gravitational settling | |
-| (b) Cyclone separators | Wet absorption methods |
-| (c) Fabric filters | Dry absorption methods |
+| (a) Gravitational settling | Wet absorption methods |
+| (b) Cyclone separators | Dry absorption methods |
+| (c) Fabric filters | |
 | (d) Electrostatic precipitators | |
 | (e) Wet collectors (Scrubbers) | |
 | Spray tower, Venturi scrubber, Cyclonic scrubber | |
@@ -261,11 +265,11 @@ Agricultural chemicals such as pesticides, insecticides and inorganic fertilizer
 
 The image also contains two illustrations:
 
-1. A collection of agricultural chemical containers and sprayers, including products labeled "WEEDN" and "ROSE DUST", as well as various bottles and cans of different colors.
+1. A collection of agricultural chemical containers and sprayers, including products labeled "WEEDN", "ROSE DUST", and various other pesticide and fertilizer containers.
 
-2. A field scene showing agricultural workers spraying chemicals on a crop, likely rice paddies. The workers are wearing protective gear and using backpack sprayers in a lush green field.
+2. A field scene showing individuals applying chemicals to a crop field. The people are wearing protective gear and using spraying equipment in a lush green field.
 
-These illustrations visually represent the use of agricultural chemicals mentioned in the text and their potential impact on soil and water pollution.
+These images visually reinforce the text's message about the use of agricultural chemicals and their potential impact on soil pollution.
 # CONTROL OF SOIL POLLUTION
 
 - Management of soil wastes include collection and categorization of wastes. Recovery of resources like scrap metals, plastics, etc., for recycling and reuse and safe disposal with a minimum environmental hazards is to be followed.
@@ -357,7 +361,7 @@ The image contains an illustration of a globe with hands covering its ears, symb
 |-------------------------|-------------|
 | Jet Aircraft (take off) | 145 db      |
 | Heavy city traffic      | 90 db       |
-| Vacuum cleaner          | 85 db       |
+| Vaccum cleaner          | 85 db       |
 | Window Air conditioner  | 60 db       |
 | Normal speech           | 60 db       |
 # NOISE POLLUTION..
@@ -497,7 +501,7 @@ Organic waste is compostable!
 | PAPER      | 15.2%      |
 | OTHERS     | 35.7%      |
 
-The image shows a trash can with cartoon-style organic waste items (leaves, banana peel, apple core) peeking out of the top. The percentages are displayed as sections of the trash can, with arrows pointing to each section from the waste type labels.
+The image shows a trash can with cartoon-style organic waste items (leaves, banana peel, apple core) peeking out of the top. Arrows point from each waste type label to its corresponding section in the trash can diagram, which is divided to represent the proportions of each waste type.
 # TYPES OF SOLID WASTE
 
 - Solid waste can be classified into different types depending on their source:
@@ -508,12 +512,12 @@ The image shows a trash can with cartoon-style organic waste items (leaves, bana
 
 - Biomedical waste or hospital waste: medicine bottles, expired medicines, syringes, medical instruments such as scissors, blades etc.
 
-[The content is accompanied by four images illustrating different types of waste:
+[The image contains four additional visual elements illustrating different types of waste:
 
 1. A pile of mixed plastic and other waste materials.
-2. A partially demolished building, showing construction debris.
-3. Household waste bins and recycling containers filled with various items.
-4. An illustration of hazardous waste products including paint cans, gas canisters, and chemical containers.]
+2. A partially demolished building, representing construction waste.
+3. Recycling bins and trash cans filled with household waste.
+4. An illustration of various household hazardous waste items like paint cans, gas canisters, and cleaning products.]
 # TYPES OF SOLID WASTE
 
 Agricultural waste: includes pesticides, crops, water coming from the fields also consists of small amount of toxic chemicals.
@@ -525,30 +529,38 @@ Hazardous waste: includes toxic chemical, acids, corrosive, ignitable and reacti
 | Image Description |
 |-------------------|
 | A large pile of agricultural waste, consisting of dried plant material and crop residues. |
-| Rows of yellow barrels labeled for nuclear waste storage in a large warehouse-like facility. A person in protective gear is visible for scale. |
+| Stacks of yellow barrels in a storage facility, likely containing nuclear waste. A person in protective gear is visible for scale. |
 | Cartoon-style illustration of hazardous waste containers including a battery, antifreeze, oil, and latex paint. |
 # SOLID WASTE COMPOSITION
 
-| Category | Percentage |
-|----------|------------|
-| Food/Kitchen Waste | 38.1% |
-| Green Waste | 17.8% |
-| Paper/Cardboard | 9.9% |
-| Other | 3.4% |
-| Metals | 7.1% |
-| Other Plastic | 4.4% |
-| Plastic | 2.9% |
-| Glass | 6.8% |
-| Other Organic | 3.2% |
-| Wood/Timber | 6.4% |
+The image contains two pie charts illustrating the composition of solid waste.
 
-| Category | Percentage |
-|----------|------------|
-| Biodegradable | 45% |
-| Inert Materials | 27% |
-| Paper Products | 8% |
-| Plastic | 9% |
-| Metals, Glass & Rags | 11% |
+## Chart 1: Detailed Waste Composition
+
+| Waste Type         | Percentage |
+|--------------------|------------|
+| Food/Kitchen Waste | 38.1%      |
+| Green Waste        | 17.8%      |
+| Paper/Cardboard    | 9.9%       |
+| Glass              | 6.8%       |
+| Wood/Timber        | 6.4%       |
+| Other Plastic      | 4.4%       |
+| Metals             | 7.1%       |
+| Other              | 3.4%       |
+| Other Organic      | 3.2%       |
+| Plastic            | 2.9%       |
+
+## Chart 2: Simplified Waste Composition
+
+| Waste Type              | Percentage |
+|-------------------------|------------|
+| Biodegradable           | 45%        |
+| Inert Materials         | 27%        |
+| Metals, Glass & Rags    | 11%        |
+| Plastic                 | 9%         |
+| Paper Products          | 8%         |
+
+These charts provide a visual representation of the different types of solid waste and their relative proportions in the overall waste composition.
 # MAGNITUDE OF PROBLEM
 
 - Per capita waste generation increasing by 1.3% per annum
@@ -574,7 +586,7 @@ The image also includes two photographs depicting waste management issues:
 
 1. A large pile of waste in an urban area, with buildings visible in the background. A person can be seen working on the waste pile.
 
-2. A smoky, smoldering waste dump, suggesting uncontrolled burning of waste materials.
+2. A smoky, smoldering waste dump, suggesting uncontrolled burning of waste.
 
 These images visually reinforce the magnitude of the waste management problem described in the text.
 # Municipal Solid Waste in India
@@ -651,9 +663,9 @@ graph TD
 
 | YELLOW BAGS | RED BAGS | BLUE BAGS | BLACK CARBOY |
 |-------------|----------|-----------|--------------|
-| Infectious waste, bandages, gauze, cotton or any other objects in contact with body fluids, human body parts, placenta etc. | Plastic waste such as catheters in action syringes, tubings, IV bottles | All types of glass bottles and broken glass articles, outdated & discarded medicines | Needles without syringes, blades, sharps and all metal articles. |
+| Infectious waste, bandages, gauze, cotton or any other objects in contact with body fluids, human body parts, placenta etc. | Plastic waste such as catheters,IV tubing, syringes, IV bottles | All types of glass bottles and broken glass articles, outdated & discarded medicines | Needles without syringes, blades, sharps and all metal articles. |
 
-The image also shows a photo of red medical waste bags piled up in containers, illustrating the color coding system in practice.
+The image also shows a photo of multiple red bags and containers, presumably containing medical waste, stacked on what appears to be a cart or trolley.
 
 | COLOUR CODING | TYPE OF CONTAINER | WASTE CATEGORY | TREATMENT OPTIONS as per Schedule I |
 |----------------|-------------------|-----------------|-------------------------------------|
@@ -675,8 +687,6 @@ The image also shows a photo of red medical waste bags piled up in containers, i
 | | DVD / VCR players, CD players, radios, Hi-Fi sets, etc. | 15% |
 | Electric waste | Refrigerators | 20% |
 | | Washing machines, dryers, air-conditioners, vacuum cleaners, coffee machines, toasters, irons, etc. | 30% |
-
-The chart shows the breakdown of e-waste into electronic waste (50%) and electric waste (50%). Electronic waste includes items like monitors, televisions, computers, and various media players. Electric waste consists of larger appliances such as refrigerators and washing machines.
 # TOXIC CHEMICALS IN E-WASTE
 
 | Chemical | Health Effects |
@@ -689,7 +699,7 @@ The chart shows the breakdown of e-waste into electronic waste (50%) and electri
 | Beryllium | Lung cancer, beryllicosis, skin diseases |
 | PVC | Hormonal problems, Reproductive issues |
 
-The image also includes a photograph of a large pile of electronic waste, including various computer parts, monitors, and other electronic devices, illustrating the physical appearance of e-waste that contains these toxic chemicals.
+The image also contains a photograph of a large pile of electronic waste, including various computer parts, monitors, and other electronic devices, illustrating the physical appearance of e-waste that contains these toxic chemicals.
 # EFFECTIVE MANAGEMENT OF E-WASTE
 
 - Massive awareness to consumers
@@ -715,7 +725,7 @@ The image also includes a photograph of a large pile of electronic waste, includ
 
 The image contains three photographs illustrating different waste disposal methods:
 
-1. A large yellow garbage truck dumping waste at a landfill site. The truck is tilted, with various types of waste spilling out onto a large pile of mixed garbage.
+1. A large yellow garbage truck dumping waste at a landfill site. The truck is tilted, with various types of trash spilling out onto a large pile of mixed waste.
 
 2. A modern incineration facility with a distinctive curved roof structure. The building is white and has a sleek, industrial design against a blue sky with some clouds.
 
@@ -793,10 +803,10 @@ These images illustrate the composting process and its end result, supporting th
 The document includes three images illustrating the effects of ocean dumping:
 
 1. A coastline littered with debris and waste materials.
-2. A polluted beach with waste scattered across the sand and in shallow water.
+2. A polluted beach with waste scattered across the sand and in the water.
 3. An illustration showing various types of waste floating in ocean water.
 
-These images visually reinforce the text's description of ocean dumping and its environmental impact.
+These images visually reinforce the text's message about the harmful impacts of ocean dumping on marine environments and potentially human health.
 | ADVANTAGES | DISADVANTAGES |
 |------------|-----------------|
 | • Convenient | • There are three main direct public health risks from ocean dumping: |
@@ -902,63 +912,63 @@ The image provides a comprehensive overview of how different plants can be used 
 - LACK OF COMMUNITY PARTICIPATION TOWARDS WASTE MANAGEMENT AND HYGIENIC CONDITIONS
 
 # Key Terms and Frequencies
-- solid waste: 16
+- solid waste: 18
 - water pollution: 13
 - noise pollution: 12
+- soil pollution: 10
 - air pollution: 9
-- soil pollution: 9
+- image contains: 9
 - large pile: 9
+- images visually: 8
 - image also: 8
 - waste management: 7
-- per capita: 7
-- waste includes: 7
-- agricultural: 0.04976787650361228
-- air: 0.13437326655975315
-- cause: 0.054744664153973506
-- causes: 0.04976787650361228
-- chemical: 0.054744664153973506
-- chemicals: 4.064698239454696
-- contains: 4.064698239454696
-- control: 0.09953575300722456
-- damage: 0.054744664153973506
-- debris: 0.054744664153973506
-- different: 0.06967502710505719
-- disposal: 4.064698239454696
-- effects: 0.10451254065758578
-- energy: 0.04976787650361228
-- garbage: 0.05972145180433473
-- human: 0.05972145180433473
-- illustrating: 0.05972145180433473
-- image: 1.1642339924619205
-- images: 4.064698239454696
-- incineration: 4.064698239454696
-- includes: 0.06967502710505719
-- including: 0.054744664153973506
-- india: 0.054744664153973506
-- industrial: 0.08460539005614087
-- landfill: 0.04976787650361228
-- large: 0.12939647890939193
-- management: 0.04976787650361228
-- materials: 0.11944290360866947
-- noise: 1.1443268418604755
-- nuclear: 0.07465181475541842
-- organic: 0.09455896535686333
-- pile: 0.054744664153973506
-- plants: 0.08460539005614087
-- plastic: 0.0895821777065021
-- pollution: 1.348375135525286
-- process: 0.04976787650361228
-- radioactive: 0.05972145180433473
-- recycling: 0.1244196912590307
-- showing: 0.054744664153973506
-- soil: 0.12939647890939193
-- solid: 0.09455896535686333
-- sources: 0.05972145180433473
-- toxic: 0.054744664153973506
-- treatment: 0.054744664153973506
-- types: 0.06967502710505719
-- use: 0.04976787650361228
-- various: 0.07962860240577964
-- waste: 1.7116806340016555
-- wastes: 0.04976787650361228
-- water: 1.258792957818784
+- air: 0.1320344703865476
+- cause: 0.053791821268593464
+- causes: 0.04890165569872133
+- chemicals: 4.063572152408337
+- collection: 0.04890165569872133
+- contains: 0.08313281468782627
+- control: 0.09780331139744267
+- damage: 0.0586819868384656
+- debris: 0.04890165569872133
+- different: 0.06357215240833773
+- disposal: 4.063572152408337
+- effects: 0.09780331139744267
+- energy: 0.04890165569872133
+- garbage: 0.053791821268593464
+- human: 4.063572152408337
+- illustrating: 0.053791821268593464
+- image: 1.1760459605153968
+- images: 4.063572152408337
+- incineration: 4.063572152408337
+- includes: 0.053791821268593464
+- including: 0.04890165569872133
+- india: 0.053791821268593464
+- industrial: 0.08313281468782627
+- landfill: 0.04890165569872133
+- large: 0.12225413924680333
+- management: 0.04890165569872133
+- materials: 0.11247380810705906
+- noise: 1.141814801526292
+- nuclear: 0.07335248354808199
+- oil: 0.04890165569872133
+- organic: 0.09780331139744267
+- pile: 0.053791821268593464
+- plants: 0.08313281468782627
+- plastic: 0.0880229802576984
+- pollution: 1.3472017554609215
+- process: 0.04890165569872133
+- radioactive: 0.0586819868384656
+- recycling: 0.12225413924680333
+- showing: 0.053791821268593464
+- soil: 0.12714430481667546
+- solid: 0.1026934769673148
+- sources: 0.0586819868384656
+- toxic: 0.053791821268593464
+- treatment: 0.053791821268593464
+- types: 0.07335248354808199
+- use: 0.04890165569872133
+- various: 0.07335248354808199
+- waste: 1.7188543387712036
+- wastes: 0.04890165569872133
+- water: 1.254288609633351

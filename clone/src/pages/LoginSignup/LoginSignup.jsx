@@ -84,7 +84,7 @@ const LoginSignup = () => {
               </div>
               
               <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">
-                {isLogin ? "Welcome Back!" : "Create Account"}
+                {isLogin ? "Welcome!" : "Create Account"}
               </h2>
               
               {isLogin ? (
