@@ -1,3 +1,7 @@
+
+
+//26-12-24
+
 // //sidebar.jsx
 /* eslint-disable no-unused-vars */
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
@@ -46,6 +50,7 @@ const Sidebar = ({
   const [chatFilterMode, setChatFilterMode] = useState(null);
   const [isRenamingChat, setIsRenamingChat] = useState(null);
   const [newChatTitle, setNewChatTitle] = useState('');
+  const [chatSearchTerm, setChatSearchTerm] = useState('');
 
   
   const handleResetSearch = () => {
@@ -339,6 +344,13 @@ const handleDocumentSelect = async (documentId) => {
 
   const handleUpdateConversationTitle = async (conversationId, newTitle) => {
     try {
+      // Validate title
+      if (!newTitle || !newTitle.trim()) {
+        toast.error('Chat title cannot be empty');
+        return;
+      }
+  
+      // Log the details for debugging
       console.log('Attempting to update conversation title:', {
         conversationId,
         newTitle,
@@ -353,7 +365,7 @@ const handleDocumentSelect = async (documentId) => {
       console.log('Update payload:', updateData);
   
       // Enhanced error handling in the service call
-      const response = await chatService.manageConversation(conversationId, updateData);
+      const response = await chatService.updateConversationTitle(conversationId, updateData);
   
       console.log('Conversation update response:', response);
   
@@ -445,6 +457,15 @@ const handleDocumentSelect = async (documentId) => {
    const filteredChatHistory = useMemo(() => {
     let filtered = [...chatHistory];
 
+    // Apply search filter first
+    if (chatSearchTerm) {
+      const searchTermLower = chatSearchTerm.toLowerCase();
+      filtered = filtered.filter(chat => 
+        chat.title.toLowerCase().includes(searchTermLower) ||
+        (chat.summary && chat.summary.toLowerCase().includes(searchTermLower))
+      );
+    }
+
     switch(chatFilterMode) {
       case 'recent':
         filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
@@ -460,7 +481,12 @@ const handleDocumentSelect = async (documentId) => {
     }
 
     return filtered;
-  }, [chatHistory, chatFilterMode]);
+  }, [chatHistory, chatFilterMode, chatSearchTerm]);
+
+  // Add this method to handle resetting chat search
+const handleResetChatSearch = () => {
+  setChatSearchTerm('');
+};
 
   // Rename chat handler
   const handleRenameChat = async (conversationId) => {
@@ -503,7 +529,9 @@ const handleDocumentSelect = async (documentId) => {
       </div>
     </div>
   );
-
+  
+  
+  
   return (
     <div className="flex h-screen relative">
         {/* Sidebar */}
@@ -712,6 +740,7 @@ const handleDocumentSelect = async (documentId) => {
               )}
             </div>
           )}
+          
           {/* Recent Chats Section with Enhanced Rendering */}
           {isOpen && (
             <div className="flex-grow flex flex-col overflow-hidden">
@@ -768,6 +797,37 @@ const handleDocumentSelect = async (documentId) => {
                   </div>
                 )}
               </h6>
+
+              {/* Add Chat Search Input */}
+              {isChatHistoryVisible && (
+                <div className="mb-2">
+                  <div className="flex items-center bg-gray-800/30 rounded-lg">
+                    <Search size={16} className="ml-2 text-gray-400" />
+                    <input
+                      type="text"
+                      placeholder="Search chats..."
+                      value={chatSearchTerm}
+                      onChange={(e) => setChatSearchTerm(e.target.value)}
+                      className="
+                        w-full bg-transparent 
+                        text-white 
+                        placeholder-gray-400 
+                        p-2 
+                        focus:outline-none 
+                        text-sm
+                      "
+                    />
+                    {chatSearchTerm && (
+                      <button 
+                        onClick={handleResetChatSearch}
+                        className="mr-2 text-gray-400 hover:text-white"
+                      >
+                        <X size={16} />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
               
               {isChatHistoryVisible && (
                 <div
@@ -778,8 +838,10 @@ const handleDocumentSelect = async (documentId) => {
                 >
                   {filteredChatHistory.length === 0 ? (
                     <div className="text-gray-400 text-center py-4">
-                      No recent chats available
-                    </div>
+                      {chatSearchTerm 
+                        ? `No chats match "${chatSearchTerm}"` 
+                        : 'No recent chats available'}
+                  </div>
                   ) : (
                     filteredChatHistory.map((chat) => (
                       <div

@@ -8,7 +8,8 @@ from .views import (LoginView, SignupView, DocumentUploadView,
     GetUserDocumentsView,
     SetActiveDocumentView,
     UserProfileView,
-    DeleteDocumentView
+    DeleteDocumentView,
+    ManageConversationView
     
 )
 
@@ -34,5 +35,8 @@ urlpatterns = [
     path('user-documents/', GetUserDocumentsView.as_view(), name='user-documents'),
     path('set-active-document/', SetActiveDocumentView.as_view(), name='set_active_document'),
     path('documents/<int:document_id>/delete/', DeleteDocumentView.as_view(), name='delete_document'),
+    path('conversations/<str:conversation_id>/', 
+         ManageConversationView.as_view(), 
+         name='manage_conversation'),
 
 ]

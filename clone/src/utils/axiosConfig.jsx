@@ -101,6 +101,47 @@ export const chatService = {
             }
         });
   },
+
+  updateConversationTitle: (conversationId, updateData) => {
+    console.log('Calling updateConversationTitle with:', {
+      conversationId, 
+      updateData
+    });
+  
+    return axiosInstance.patch(`/conversations/${conversationId}/`, updateData)
+      .then(response => {
+        console.log('Update conversation title response:', response);
+        return response.data;
+      })
+      .catch(error => {
+        // Log the full error object for debugging
+        console.error('Full error object:', error);
+  
+        // More detailed error handling
+        if (error.response) {
+          // The request was made and the server responded with a status code
+          // that falls out of the range of 2xx
+          console.error('Error Status:', error.response.status);
+          console.error('Error Data:', error.response.data);
+          
+          // Throw a more informative error
+          throw new Error(
+            error.response.data?.error || 
+            error.response.data?.message || 
+            'Failed to update conversation title'
+          );
+        } else if (error.request) {
+          // The request was made but no response was received
+          console.error('No response received:', error.request);
+          throw new Error('No response from server');
+        } else {
+          // Something happened in setting up the request that triggered an Error
+          console.error('Error Message:', error.message);
+          throw error;
+        }
+      });
+  },
+
   manageConversation: (conversationId, data) => {
     return axiosInstance.patch(`/conversations/${conversationId}/`, data)
       .then(response => {
@@ -178,6 +219,7 @@ export const chatService = {
     });
   }
 };
+
 
 export default axiosInstance;
 

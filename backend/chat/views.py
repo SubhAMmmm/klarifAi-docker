@@ -156,12 +156,12 @@ class GetUserDocumentsView(APIView):
         try:
             user = request.user
             documents = Document.objects.filter(user=user).select_related('processedindex')
-           
+        
             document_list = []
             for doc in documents:
                 try:
                     processed = doc.processedindex
-                    document_list.append({
+                    document_data = {
                         'id': doc.id,
                         'filename': doc.filename,
                         'uploaded_at': doc.uploaded_at.strftime('%Y-%m-%d %H:%M'),
@@ -173,23 +173,101 @@ class GetUserDocumentsView(APIView):
                         ] if all([processed.follow_up_question_1,
                                 processed.follow_up_question_2,
                                 processed.follow_up_question_3]) else []
-                    })
+                    }
+                    document_list.append(document_data)
+                    
+                    # Print the document data
+                    print(f"Document Response - ID: {doc.id}")
+                    print(f"Filename: {document_data['filename']}")
+                    print(f"Summary: {document_data['summary'][:200]}...")  # First 200 chars
+                    print(f"Follow-up Questions: {document_data['follow_up_questions']}")
+                    print("---")
+                
                 except ProcessedIndex.DoesNotExist:
-                    document_list.append({
+                    document_data = {
                         'id': doc.id,
                         'filename': doc.filename,
                         'uploaded_at': doc.uploaded_at.strftime('%Y-%m-%d %H:%M'),
                         'summary': 'Document processing pending',
                         'follow_up_questions': []
-                    })
-           
+                    }
+                    document_list.append(document_data)
+            
+            # Print full document list
+            print("Full Document List Response:")
+            print(document_list)
+            
             return Response(document_list, status=status.HTTP_200_OK)
-           
+        
         except Exception as e:
+            print(f"Error in GetUserDocumentsView: {str(e)}")
             return Response(
                 {'error': f'Failed to fetch documents: {str(e)}'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+class ManageConversationView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def update_conversation(self, request, conversation_id):
+        try:
+            # Log incoming request data for debugging
+            print(f"Incoming update request for conversation {conversation_id}")
+            print(f"Request data: {request.data}")
+
+            # Validate input
+            new_title = request.data.get('title')
+            is_active = request.data.get('is_active', True)
+
+            if not new_title or not new_title.strip():
+                return Response(
+                    {'error': 'Title cannot be empty'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Find the conversation
+            try:
+                conversation = ChatHistory.objects.get(
+                    conversation_id=conversation_id, 
+                    user=request.user
+                )
+            except ChatHistory.DoesNotExist:
+                return Response(
+                    {'error': 'Conversation not found'},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
+            # Update the title and active status
+            conversation.title = new_title.strip()
+            conversation.is_active = is_active
+            conversation.save()
+
+            # Log successful update
+            print(f"Conversation {conversation_id} updated successfully")
+            print(f"New title: {conversation.title}")
+
+            return Response({
+                'message': 'Conversation title updated successfully',
+                'conversation_id': str(conversation.conversation_id),
+                'new_title': conversation.title,
+                'is_active': conversation.is_active
+            }, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            # Comprehensive error logging
+            print(f"Error updating conversation title: {str(e)}")
+            logger.error(f"Conversation title update error: {str(e)}")
+
+            return Response(
+                {'error': 'Failed to update conversation title', 'details': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    def put(self, request, conversation_id):
+        return self.update_conversation(request, conversation_id)
+
+    def patch(self, request, conversation_id):
+        return self.update_conversation(request, conversation_id)
 
 class DocumentUploadView(APIView):
     parser_classes = (MultiPartParser, FormParser)
@@ -262,6 +340,16 @@ class DocumentUploadView(APIView):
                         'summary': processed_data['summary']
                     })
                     last_processed_doc_id = document.id
+
+                    print(f"Uploaded Document - ID: {document.id}")
+                    print(f"Filename: {document.filename}")
+                    print(f"Summary: {processed_data['summary'][:200]}...")  # First 200 chars
+                    print(f"Follow-up Questions: {processed_data.get('follow_up_questions', [])}")
+                    print("---")
+
+            # Print full uploaded documents list
+            print("Full Uploaded Documents Response:")
+            print(uploaded_docs)
 
             # Store the last processed document ID in the session
             request.session['active_document_id'] = last_processed_doc_id
@@ -571,10 +659,21 @@ class GetChatHistoryView(APIView):
                         str(doc.id) for doc in conversation.documents.all()
                     ]
                 })
+
+            # Print chat history details
+            print("Chat History Response:")
+            print(f"Total Conversations: {len(history)}")
+            for chat in history:
+                print(f"Conversation ID: {chat['conversation_id']}")
+                print(f"Title: {chat['title']}")
+                print(f"Message Count: {len(chat['messages'])}")
+                print(f"Follow-up Questions: {chat['follow_up_questions']}")
+                print("---")
             
             return Response(history, status=status.HTTP_200_OK)
             
         except Exception as e:
+            print(f"Error in GetChatHistoryView: {str(e)}")
             return Response(
                 {'error': f'Failed to fetch chat history: {str(e)}'}, 
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -804,13 +903,24 @@ class ChatView(APIView):
             )
             memory_buffer.update_memory(conversation.messages.all())
 
-            return Response({
-                'response': response,
-                'follow_up_questions': follow_up_questions,
-                'conversation_id': str(conversation.conversation_id),
-                'citations': results.get('citations', []),
-                'active_document_id': active_document_id
-            }, status=status.HTTP_200_OK)
+            response_data = {
+            'response': response,
+            'follow_up_questions': follow_up_questions,
+            'conversation_id': str(conversation.conversation_id),
+            'citations': results.get('citations', []),
+            'active_document_id': active_document_id
+        }
+
+        # Print detailed chat response information
+            print("\n--- Chat Interaction Logged ---")
+            print(f"User Question: {message}")
+            print(f"Assistant Response: {response[:500]}...")  # First 500 chars
+            print("Follow-up Questions:")
+            for i, q in enumerate(follow_up_questions, 1):
+                print(f"{i}. {q}")
+            print("-----------------------------\n")
+
+            return Response(response_data, status=status.HTTP_200_OK)
 
         except Exception as e:
             logger.error(f"Unexpected error in ChatView: {str(e)}", exc_info=True)
@@ -1090,6 +1200,7 @@ class GetConversationView(APIView):
                 {'error': f'Failed to fetch conversations: {str(e)}'}, 
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
 
 # Optional: Add a view to delete a conversation
 class DeleteConversationView(APIView):
