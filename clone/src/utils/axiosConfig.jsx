@@ -25,6 +25,38 @@ axiosInstance.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
+export const ideaService = {
+  generateIdeas: (data) => {
+    return axiosInstance.post('/ideas/generate-ideas/', data);
+  },
+
+  updateIdea: (data) => {
+    return axiosInstance.put('/ideas/update-idea/', data);
+  },
+
+  deleteIdea: (ideaId) => {
+    return axiosInstance.delete('/ideas/delete-idea/', { data: { idea_id: ideaId } });
+  },
+
+  generateProductImage: (data) => {
+    return axiosInstance.post('/ideas/generate-product-image/', data);
+  }
+};
+
+export const authService = {
+  // ... existing auth methods ...
+
+  initiatePasswordReset: (email) => {
+    return axiosInstance.post('/password-reset/initiate/', { email });
+  },
+
+  confirmPasswordReset: (token, newPassword) => {
+    return axiosInstance.post('/password-reset/confirm/', { 
+      token, 
+      new_password: newPassword 
+    });
+  }
+};
 
 // Export services
 export const documentService = {

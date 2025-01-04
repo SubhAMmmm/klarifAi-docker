@@ -32,11 +32,13 @@ const LoginSignup = () => {
 
       localStorage.setItem('token', token);
       
-      // Determine redirect path
-      const from = location.state?.from?.pathname || '/dashboard';
+      // // Determine redirect path
+      // const from = location.state?.from?.pathname || '/dashboard';
       
-      // Navigate to the determined path
-      navigate(from, { replace: true });
+      // // Navigate to the determined path
+      // navigate(from, { replace: true });
+
+      navigate('/landing', { replace: true });
     } catch (error) {
       console.error('Authentication error:', error);
       // Optional: Add user-friendly error handling

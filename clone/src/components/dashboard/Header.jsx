@@ -171,9 +171,9 @@ const Header = () => {
             alt="Logo" 
             className="h-12 w-auto transition-transform hover:scale-105"
           />
-          <h5 className="hidden lg:block text-white text-lg font-semibold tracking-wider">
+          {/* <h5 className="hidden lg:block text-white text-lg font-semibold tracking-wider">
             GPT-Powered Insights Activator
-          </h5>
+          </h5> */}
         </div>
         
         {/* User Profile and Logout Section */}

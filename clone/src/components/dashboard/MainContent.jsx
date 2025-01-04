@@ -1,3 +1,4 @@
+
 // //11-12-24
 // // MainContent.jsx
 // /* eslint-disable no-unused-vars */
@@ -356,30 +357,36 @@
 //       const chatMessages = Array.isArray(selectedChat.messages)
 //         ? selectedChat.messages
 //         : [];
-
+  
 //       // Ensure messages are sorted chronologically
 //       const sortedMessages = chatMessages.sort(
 //         (a, b) => new Date(a.created_at) - new Date(b.created_at)
 //       );
-
-//       setConversation(sortedMessages);
-
+  
+//       // Create a new array with unique messages
+//       const uniqueMessages = Array.from(
+//         new Set(sortedMessages.map(JSON.stringify))
+//       ).map(JSON.parse);
+  
+//       // Set conversation with unique messages
+//       setConversation(uniqueMessages);
+  
 //       // Set summary with fallback
 //       setSummary(selectedChat.summary || "");
-
+  
 //       // Ensure follow-up questions is an array
 //       const followUpQuestions = Array.isArray(selectedChat.follow_up_questions)
 //         ? selectedChat.follow_up_questions
 //         : selectedChat.follow_up_questions
 //         ? [selectedChat.follow_up_questions]
 //         : [];
-
+  
 //       setCurrentFollowUpQuestions(followUpQuestions);
 //       setFollowUpQuestions(followUpQuestions);
-
+  
 //       // Set conversation ID
 //       setConversationId(selectedChat.conversation_id);
-
+  
 //       // Handle document selection
 //       if (
 //         selectedChat.selected_documents &&
@@ -389,7 +396,7 @@
 //           doc.toString()
 //         );
 //         setLocalSelectedDocuments(documentIds);
-
+  
 //         if (setSelectedDocuments) {
 //           setSelectedDocuments(documentIds);
 //         }
@@ -972,71 +979,133 @@
 //     setIsFollowUpQuestionsMinimized((prev) => !prev);
 //   };
 
-//   const handleMessageUpdate = async (messageIndex, newContent) => {
-//     // Prevent updates if content is unchanged
-//     if (newContent === conversation[messageIndex].content) {
-//       setEditingMessageId(null);
-//       return;
-//     }
+//   // Add a method to clean up duplicate messages
+//   const cleanupConversation = (messages) => {
+//     const uniqueMessages = [];
+//     const seenMessages = new Set();
   
-//     setIsLoading(true);
+//     messages.forEach((message, index) => {
+//       // Create a unique key for the message
+//       const messageKey = JSON.stringify({
+//         role: message.role,
+//         content: message.content,
+//         // Add index to ensure uniqueness of assistant messages
+//         index: index
+//       });
   
-//     try {
-//       // Optimistic UI update
-//       const updatedConversation = [...conversation];
-//       updatedConversation[messageIndex] = {
-//         ...updatedConversation[messageIndex],
-//         content: newContent,
-//       };
-//       setConversation(updatedConversation);
+//       // For assistant messages, only keep the most recent one after a user message
+//       if (message.role === 'assistant') {
+//         // Find the last user message before this assistant message
+//         const lastUserMessageIndex = messages.slice(0, index).reverse()
+//           .findIndex(m => m.role === 'user');
+        
+//         if (lastUserMessageIndex !== -1) {
+//           const messageKey = JSON.stringify({
+//             role: message.role,
+//             content: message.content,
+//             userMessageIndex: index - lastUserMessageIndex - 1
+//           });
   
-//       const requestData = {
-//         message: newContent,
-//         conversation_id: conversationId,
-//         selected_documents: localSelectedDocuments,
-//         context: updatedConversation.slice(0, messageIndex),
-//       };
+//           if (!seenMessages.has(messageKey)) {
+//             uniqueMessages.push(message);
+//             seenMessages.add(messageKey);
+//           }
+//         } else {
+//           // If no previous user message, add the assistant message
+//           uniqueMessages.push(message);
+//         }
+//       } else {
+//         // For user messages, always add
+//         if (!seenMessages.has(messageKey)) {
+//           uniqueMessages.push(message);
+//           seenMessages.add(messageKey);
+//         }
+//       }
+//     });
   
-//       const response = await chatService.sendMessage(requestData);
-  
-//       const assistantMessage = {
-//         role: "assistant",
-//         content: response.response || "No response received",
-//         citations: response.citations || [],
-//         follow_up_questions: response.follow_up_questions || [],
-//       };
-  
-//       // Update conversation with new response
-//       const finalConversation = [
-//         ...updatedConversation.slice(0, messageIndex + 1),
-//         assistantMessage
-//       ];
-  
-//       setConversation(finalConversation);
-//       setEditingMessageId(null);  // Exit editing mode
-  
-//       // Update follow-up questions
-//       const newFollowUpQuestions = response.follow_up_questions || [];
-//       setCurrentFollowUpQuestions(newFollowUpQuestions);
-//       setFollowUpQuestions(newFollowUpQuestions);
-  
-//       toast.success("Message updated successfully!");
-  
-//     } catch (error) {
-//       console.error("Failed to update message:", error);
-      
-//       // Revert to original conversation state
-//       setConversation(conversation);
-      
-//       toast.error(
-//         error.response?.data?.error || 
-//         "Failed to update message. Please try again."
-//       );
-//     } finally {
-//       setIsLoading(false);
-//     }
+//     return uniqueMessages;
 //   };
+// const handleMessageUpdate = async (messageIndex, newContent) => {
+//   // Prevent updates if content is unchanged
+//   if (newContent === conversation[messageIndex].content) {
+//     setEditingMessageId(null);
+//     return;
+//   }
 
+//   setIsLoading(true);
+
+//   try {
+//     // Create a new conversation array up to the edited message
+//     const updatedConversation = conversation.slice(0, messageIndex + 1);
+    
+//     // Update the specific message content
+//     updatedConversation[messageIndex] = {
+//       ...updatedConversation[messageIndex],
+//       content: newContent,
+//     };
+
+//     // Remove any subsequent assistant messages after the edited user message
+//     setConversation(updatedConversation);
+
+//     const requestData = {
+//       message: newContent,
+//       conversation_id: conversationId,
+//       selected_documents: localSelectedDocuments,
+//       context: updatedConversation.slice(0, messageIndex), // Send previous context
+//     };
+
+//     const response = await chatService.sendMessage(requestData);
+
+//     const assistantMessage = {
+//       role: "assistant",
+//       content: response.response || "No response received",
+//       citations: response.citations || [],
+//       follow_up_questions: response.follow_up_questions || [],
+//     };
+
+//     // Add only the new assistant response
+//     const finalConversation = [
+//       ...updatedConversation,
+//       assistantMessage
+//     ];
+
+//     // Clean up duplicates if needed
+//     const cleanedConversation = cleanupConversation(finalConversation);
+
+//     setConversation(cleanedConversation);
+//     setEditingMessageId(null);  // Exit editing mode
+
+//     // Update follow-up questions
+//     const newFollowUpQuestions = response.follow_up_questions || [];
+//     setCurrentFollowUpQuestions(newFollowUpQuestions);
+//     setFollowUpQuestions(newFollowUpQuestions);
+
+//     toast.success("Message updated successfully!");
+
+//   } catch (error) {
+//     console.error("Failed to update message:", error);
+    
+//     // Revert to original conversation state
+//     setConversation(conversation);
+    
+//     toast.error(
+//       error.response?.data?.error || 
+//       "Failed to update message. Please try again."
+//     );
+//   } finally {
+//     setIsLoading(false);
+//   }
+// };
+
+// // Add a useEffect to further clean up conversation on initial load
+// useEffect(() => {
+//   if (conversation.length > 0) {
+//     const cleanedConversation = cleanupConversation(conversation);
+//     if (cleanedConversation.length !== conversation.length) {
+//       setConversation(cleanedConversation);
+//     }
+//   }
+// }, [conversation]);
   
 
 //   return (
@@ -1445,7 +1514,9 @@
 // export default MainContent;
 
 
-//11-12-24
+// 30-12-24
+
+// 11-12-24
 // MainContent.jsx
 /* eslint-disable no-unused-vars */
 import React, { useState, useEffect, useRef } from "react";
@@ -1469,6 +1540,7 @@ import Citation from "../dashboard/Citations";
 import Card from "../Card";
 import { Tooltip } from "react-tooltip";
 import EditableMessage from "./EditableMessage";
+import SummaryFormatter from "./SummaryFormatter";
 
 const MainContent = ({
   selectedChat,
@@ -1511,6 +1583,7 @@ const MainContent = ({
   const [processingProgress, setProcessingProgress] = useState(0);
 
   const [editingMessageId, setEditingMessageId] = useState(null);
+  const [messageHistory, setMessageHistory] = useState({});
 
   // Add a new Citation component for inline citations
   const InlineCitation = ({ citation, index }) => {
@@ -1761,22 +1834,8 @@ const MainContent = ({
               </div>
 
               {/* Summary Content */}
-              <div className="flex-1 overflow-y-auto custom-scrollbar px-4 sm:px-6 py-4 sm:py-6 bg-gray-800/20">
-                <div
-                  className="
-                    prose 
-                    prose-invert 
-                    prose-sm 
-                    sm:prose-base 
-                    max-w-none 
-                    text-gray-300 
-                    leading-relaxed 
-                    space-y-4
-                  "
-                  dangerouslySetInnerHTML={{
-                    __html: selectedDocument.summary || "No summary available",
-                  }}
-                />
+              <div className="flex-1 overflow-y-auto custom-scrollbar  bg-gray-800/20">
+                <SummaryFormatter content={selectedDocument.summary} />
               </div>
             </div>
           </div>
@@ -2471,8 +2530,9 @@ const MainContent = ({
   
     return uniqueMessages;
   };
+
+  // Add this method to handle message updates
 const handleMessageUpdate = async (messageIndex, newContent) => {
-  // Prevent updates if content is unchanged
   if (newContent === conversation[messageIndex].content) {
     setEditingMessageId(null);
     return;
@@ -2481,69 +2541,112 @@ const handleMessageUpdate = async (messageIndex, newContent) => {
   setIsLoading(true);
 
   try {
+    // Store the original message and its response if not already stored
+    if (!messageHistory[messageIndex]) {
+      const originalMessage = conversation[messageIndex];
+      const originalResponse = conversation[messageIndex + 1];
+      const subsequentMessages = conversation.slice(messageIndex + 2);
+      storeMessageHistory(messageIndex, originalMessage.content, originalResponse, subsequentMessages);
+    }
+
     // Create a new conversation array up to the edited message
-    const updatedConversation = conversation.slice(0, messageIndex + 1);
+    const conversationUpToEdit = conversation.slice(0, messageIndex + 1);
     
-    // Update the specific message content
-    updatedConversation[messageIndex] = {
-      ...updatedConversation[messageIndex],
+    // Update the edited message
+    const updatedMessage = {
+      ...conversationUpToEdit[messageIndex],
       content: newContent,
+      edited: true,
+      editedAt: new Date().toISOString()
     };
+    
+    conversationUpToEdit[messageIndex] = updatedMessage;
 
-    // Remove any subsequent assistant messages after the edited user message
-    setConversation(updatedConversation);
+    // Update conversation state immediately for better UX
+    setConversation(conversationUpToEdit);
 
+    // Prepare request data for the API
     const requestData = {
       message: newContent,
       conversation_id: conversationId,
       selected_documents: localSelectedDocuments,
-      context: updatedConversation.slice(0, messageIndex), // Send previous context
+      context: conversationUpToEdit
     };
 
     const response = await chatService.sendMessage(requestData);
 
+    // Add the new assistant response
     const assistantMessage = {
       role: "assistant",
       content: response.response || "No response received",
       citations: response.citations || [],
-      follow_up_questions: response.follow_up_questions || [],
+      follow_up_questions: response.follow_up_questions || []
     };
 
-    // Add only the new assistant response
-    const finalConversation = [
-      ...updatedConversation,
-      assistantMessage
-    ];
+    const finalConversation = [...conversationUpToEdit, assistantMessage];
 
-    // Clean up duplicates if needed
-    const cleanedConversation = cleanupConversation(finalConversation);
+    setConversation(finalConversation);
+    setEditingMessageId(null);
 
-    setConversation(cleanedConversation);
-    setEditingMessageId(null);  // Exit editing mode
-
-    // Update follow-up questions
-    const newFollowUpQuestions = response.follow_up_questions || [];
-    setCurrentFollowUpQuestions(newFollowUpQuestions);
-    setFollowUpQuestions(newFollowUpQuestions);
-
-    toast.success("Message updated successfully!");
+    // Update follow-up questions if available
+    if (response.follow_up_questions?.length > 0) {
+      setCurrentFollowUpQuestions(response.follow_up_questions);
+      setFollowUpQuestions(response.follow_up_questions);
+    }
 
   } catch (error) {
     console.error("Failed to update message:", error);
-    
-    // Revert to original conversation state
+    toast.error(error.response?.data?.error || "Failed to update message. Please try again.");
+    // Restore the original conversation state
     setConversation(conversation);
-    
-    toast.error(
-      error.response?.data?.error || 
-      "Failed to update message. Please try again."
-    );
   } finally {
     setIsLoading(false);
   }
 };
+  // Add this method to your component
+  const storeMessageHistory = (messageIndex, originalMessage, originalResponse, subsequentMessages) => {
+    setMessageHistory(prev => ({
+      ...prev,
+      [messageIndex]: {
+        message: originalMessage,
+        response: originalResponse,
+        subsequentMessages: subsequentMessages
+      }
+    }));
+  };
+  // Add this method to handle message reversion
+const handleMessageRevert = (messageIndex, originalMessage, originalResponse, subsequentMessages) => {
+  const historyEntry = messageHistory[messageIndex];
+  
+  if (historyEntry) {
+    // Create the reverted conversation
+    const conversationUpToRevert = conversation.slice(0, messageIndex);
+    
+    const revertedMessage = {
+      ...conversation[messageIndex],
+      content: originalMessage,
+      edited: false
+    };
+    
+    let updatedConversation = [
+      ...conversationUpToRevert,
+      revertedMessage,
+      originalResponse,
+      ...(subsequentMessages || [])
+    ];
+    
+    setConversation(updatedConversation);
+    
+    // Remove this entry from message history
+    const updatedHistory = { ...messageHistory };
+    delete updatedHistory[messageIndex];
+    setMessageHistory(updatedHistory);
+    
+    toast.success("Message reverted to original version");
+  }
+};
 
-// Add a useEffect to further clean up conversation on initial load
+  // Add a useEffect to further clean up conversation on initial load
 useEffect(() => {
   if (conversation.length > 0) {
     const cleanedConversation = cleanupConversation(conversation);
@@ -2631,50 +2734,51 @@ useEffect(() => {
             >
               {/* Rest of the chat messages rendering code */}
               {conversation.map((msg, index) => (
-  <React.Fragment key={index}>
-    <div
-      className={`flex ${
-        msg.role === "user"
-          ? "justify-end mt-16"
-          : "justify-start"
-      }`}
-    >
-      <div
-        className={` p-4 rounded-lg ${
-          msg.role === "user"
-            ? "bg-blue-500/20 text-white max-w-[70%]"
-            : "bg-gray-800/50  text-white max-w-full"
-        }`}
-      >
-        <div className="flex items-center mb-2">
-          {msg.role === "user" ? (
-            <User className="mr-2 h-5 w-5" />
-          ) : (
-            <Bot className="mr-2 h-5 w-5" />
-          )}
-          <span className="font-bold">
-            {msg.role === "user" ? "You" : "Assistant"}
-          </span>
-        </div>
-        {msg.role === "user" ? (
-          <EditableMessage
-            content={msg.content}
-            isEditing={editingMessageId === index}
-            setIsEditing={(isEditing) =>
-              setEditingMessageId(isEditing ? index : null)
-            }
-            onSave={(newContent) =>
-              handleMessageUpdate(index, newContent)
-            }
-            disabled={isLoading} // Remove the condition that restricts editing to the second-to-last message
-          />
-        ) : (
-          renderMessage(msg)
-        )}
-      </div>
-    </div>
-  </React.Fragment>
-))}
+                  <React.Fragment key={index}>
+                    <div
+                      className={`flex ${
+                        msg.role === "user"
+                          ? "justify-end mt-16"
+                          : "justify-start"
+                      }`}
+                    >
+                      <div
+                        className={` p-4 rounded-lg ${
+                          msg.role === "user"
+                            ? "bg-blue-500/20 text-white max-w-[70%]"
+                            : "bg-gray-800/50  text-white max-w-full"
+                        }`}
+                      >
+                        <div className="flex items-center mb-2">
+                          {msg.role === "user" ? (
+                            <User className="mr-2 h-5 w-5" />
+                          ) : (
+                            <Bot className="mr-2 h-5 w-5" />
+                          )}
+                          <span className="font-bold">
+                            {msg.role === "user" ? "You" : "Assistant"}
+                          </span>
+                        </div>
+                        {msg.role === "user" ? (
+                          <EditableMessage
+                            content={msg.content}
+                            isEditing={editingMessageId === index}
+                            setIsEditing={(isEditing) => setEditingMessageId(isEditing ? index : null)}
+                            onSave={(newContent) => handleMessageUpdate(index, newContent)}
+                            onRevert={(originalMessage, originalResponse, subsequentMessages) => 
+                              handleMessageRevert(index, originalMessage, originalResponse, subsequentMessages)
+                            }
+                            disabled={isLoading}
+                            messageIndex={index}
+                            messageHistory={messageHistory}
+                          />
+                        ) : (
+                          renderMessage(msg)
+                        )}
+                      </div>
+                    </div>
+                  </React.Fragment>
+                ))}
 
               {isLoading && (
                 <div className="text-center text-white">
@@ -2958,3 +3062,5 @@ MainContent.propTypes = {
 };
 
 export default MainContent;
+
+

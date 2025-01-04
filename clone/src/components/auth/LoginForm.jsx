@@ -1,60 +1,10 @@
-// /* eslint-disable no-unused-vars */
-// import React, { useState } from 'react';
 
-// const LoginForm = ({ onSuccess }) => {
-//   const [formData, setFormData] = useState({
-//     email: '',
-//     password: ''
-//   });
-
-//   const handleSubmit = async (e) => {
-//     e.preventDefault();
-//     // Add your login logic here
-//     // For demo purposes:
-//     const mockToken = 'mock-jwt-token';
-//     onSuccess(mockToken);
-//   };
-
-//   return (
-//     <form onSubmit={handleSubmit} className="space-y-4">
-//       <div>
-//         <label className="block text-sm font-medium text-gray-600">Email</label>
-//         <input
-//           type="email"
-//           required
-//           value={formData.email}
-//           onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-//           className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300"
-//         />
-//       </div>
-      
-//       <div>
-//         <label className="block text-sm font-medium text-gray-600">Password</label>
-//         <input
-//           type="password"
-//           required
-//           value={formData.password}
-//           onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-//           className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300"
-//         />
-//       </div>
-
-//       <button
-//         type="submit"
-//         className="w-full py-2 mt-6 font-semibold text-white bg-blue-900 rounded-lg hover:bg-blue-800 transition-all duration-300"
-//       >
-//         Login
-//       </button>
-//     </form>
-//   );
-// };
-
-// export default LoginForm;
 
 /* eslint-disable no-unused-vars */
 import React, { useState } from 'react';
 import axiosInstance from '../../utils/axiosConfig';
 import PropTypes from 'prop-types';
+import { Link } from 'react-router-dom';
 
 const LoginForm = ({ onSuccess = () => {} }) => {
     const [username, setUsername] = useState('');
@@ -110,6 +60,14 @@ const LoginForm = ({ onSuccess = () => {} }) => {
             >
                 Login
             </button>
+            <div className="text-center items-center justify-center">
+                <Link 
+                    to="/forgot-password" 
+                    className="text-sm text-blue-900 hover:text-blue-700 justify-center items-center"
+                >
+                    Forgot Password?
+                </Link>
+            </div>
         </form>
     );
 };
