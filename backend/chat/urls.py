@@ -9,7 +9,8 @@ from .views import (LoginView, SignupView, DocumentUploadView,
     SetActiveDocumentView,
     UserProfileView,
     DeleteDocumentView,
-    ManageConversationView
+    ManageConversationView,
+
     
 )
 
@@ -39,4 +40,5 @@ urlpatterns = [
          ManageConversationView.as_view(), 
          name='manage_conversation'),
 
+    
 ]

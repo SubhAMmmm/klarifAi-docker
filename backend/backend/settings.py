@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',  # Add this line
     'corsheaders',
     'chat',
+    'ideaGen',
 ]
 
 REST_FRAMEWORK = {
@@ -189,3 +190,12 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # In your settings.py
 LOCAL_SENTENCE_TRANSFORMER_PATH = r'C:\Users\TapasmitaPattanaik\Desktop\ReactClone\backend'
+
+# Email Configuration
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'  # Or your SMTP server
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'your-email@gmail.com'
+EMAIL_HOST_PASSWORD = 'your-app-password'  # Use App Password for Gmail
+DEFAULT_FROM_EMAIL = 'your-email@gmail.com'

@@ -380,7 +380,7 @@ class DocumentUploadView(APIView):
 
         # Parse the document using LlamaParse
         parser = LlamaParse(
-            api_key="llx-32AVy1fD7UwN5VN440E6m5jdnWQpWNctVJzOS3nt5PQG9coe",
+            api_key="llx-EuNzURDKKAGJ34LIr56Kwz3hlv4s9o8kmtf4VkBs5Dy7Hf24",
             result_type="markdown",
             verbose=True,
             images=True,
