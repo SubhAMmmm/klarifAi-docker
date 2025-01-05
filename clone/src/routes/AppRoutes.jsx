@@ -7,6 +7,7 @@ import PrivateRoute from './PrivateRoute';
 import LoginSignup from '../pages/LoginSignup/LoginSignup';
 import Dashboard from '../pages/Dashboard/Dashboard';
 import LandingPage from '../components/LandingPage';
+import StructruredDataQuery from '../components/StructruredDataQuery';
 
 import ForgotPasswordForm from '../components/auth/ForgotPasswordForm';
 import ResetPasswordForm from '../components/auth/ResetPasswordForm';
@@ -23,6 +24,7 @@ const AppRoutes = () => {
         <Route path="/reset-password" element={<ResetPasswordForm />} />
         <Route path="/landing" element={<LandingPage />} />
         <Route path="/idea-generation" element={<IdeaForm />} />
+        <Route path="/structured-data-query" element={<StructruredDataQuery />} />
 
         <Route path="/dashboard" element={
           <PrivateRoute>

@@ -1,5 +1,3 @@
-
-
 //4.12.2023
 
 //axiosConfig.jsx
@@ -25,21 +23,54 @@ axiosInstance.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
+
+export const dataAnalysisService = {
+  uploadFile: (formData) => {
+    return axiosInstance.post('/data/analysis/', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+  },
+
+  analyzeData: (query) => {
+    return axiosInstance.post('/data/analysis/', { query }, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      }
+    });
+  },
+
+  saveResults: (results) => {
+    return axiosInstance.post('/data/save-results/', { results }, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      }
+    });
+  }
+};
+
 export const ideaService = {
   generateIdeas: (data) => {
-    return axiosInstance.post('/ideas/generate-ideas/', data);
+    return axiosInstance.post('/ideas/generate_ideas/', data);
   },
 
   updateIdea: (data) => {
-    return axiosInstance.put('/ideas/update-idea/', data);
+    return axiosInstance.put('/ideas/update_idea/', data);
   },
 
   deleteIdea: (ideaId) => {
-    return axiosInstance.delete('/ideas/delete-idea/', { data: { idea_id: ideaId } });
+    return axiosInstance.delete('/ideas/delete_idea/', { data: { idea_id: ideaId } });
   },
 
   generateProductImage: (data) => {
-    return axiosInstance.post('/ideas/generate-product-image/', data);
+    return axiosInstance.post('/ideas/generate_product_image/', data);
+  },
+
+  regenerateProductImage: (data) => {
+    return axiosInstance.post('/ideas/regenerate_product_image/', data);
   }
 };
 

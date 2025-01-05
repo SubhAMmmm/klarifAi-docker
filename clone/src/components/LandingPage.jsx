@@ -40,7 +40,7 @@ const features = [
       title: 'Structured Data Query',
       icon: Database,
       description: 'Transform natural language into precise SQL queries, enabling intuitive data exploration without complex database syntax.',
-      path: '/data-query',
+      path: '/structured-data-query',
       actionText: 'Start Querying'
     }
   ];
