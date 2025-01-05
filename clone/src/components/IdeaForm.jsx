@@ -421,13 +421,11 @@ const IdeaForm = () => {
 
   
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-900 to-gray-900">
-      <nav className="sticky top-0 z-50 bg-gray-900 bg-opacity-90 backdrop-blur-sm">
+    <div className="idea-form-container">
+      <nav className="navbar">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-center h-16">
-            <div className="flex-shrink-0">
-              <h1 className="text-xl font-bold text-white">Idea Generator</h1>
-            </div>
+            <h1 className="text-xl font-bold text-white">Idea Generator</h1>
           </div>
         </div>
       </nav>
@@ -435,7 +433,7 @@ const IdeaForm = () => {
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto space-y-8">
           {showForm ? (
-            <div className="bg-gray-800 rounded-lg shadow-xl p-6 space-y-6 animate-fade-in">
+            <div className="form-card animate-fade-in">
               <h2 className="text-2xl font-bold text-white text-center">
                 Generate Product Ideas
               </h2>
@@ -444,10 +442,7 @@ const IdeaForm = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {["product", "brand", "category"].map((field) => (
                     <div key={field}>
-                      <label
-                        htmlFor={field}
-                        className="block text-sm font-medium text-gray-300 mb-2"
-                      >
+                      <label className="block text-sm font-medium text-gray-300 mb-2">
                         {field.charAt(0).toUpperCase() + field.slice(1)}
                       </label>
                       <input
@@ -457,7 +452,7 @@ const IdeaForm = () => {
                         value={formData[field]}
                         onChange={handleBaseFieldChange}
                         required
-                        className="w-full bg-gray-700 border border-gray-600 rounded-md py-2 px-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-300"
+                        className="input-field"
                       />
                     </div>
                   ))}
@@ -471,39 +466,36 @@ const IdeaForm = () => {
                     </h3>
                   </div>
 
-                  {/* Field Type Controls Group */}
-                  <div className="space-y-4 bg-gray-700 p-4 rounded-lg">
-                    {/* Custom Field Type Input */}
+                  <div className="bg-gray-700/50 p-4 rounded-lg space-y-4">
                     <div className="flex gap-2">
                       <input
                         type="text"
                         value={newCustomField}
                         onChange={(e) => setNewCustomField(e.target.value)}
                         placeholder="Add custom field type..."
-                        className="flex-1 bg-gray-600 border border-gray-500 rounded-md py-2 px-3 text-white"
+                        className="input-field"
                       />
                       <button
                         type="button"
                         onClick={addCustomFieldType}
-                        className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700"
+                        className="btn btn-primary"
                       >
                         Add Field Type
                       </button>
                     </div>
 
-                    {/* All Field Type Buttons */}
                     <div className="flex flex-wrap gap-2">
                       <button
                         type="button"
                         onClick={() => addField("benefit")}
-                        className="flex items-center gap-1 text-sm bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700"
+                        className="btn btn-primary"
                       >
                         <PlusCircle size={16} /> Benefit
                       </button>
                       <button
                         type="button"
                         onClick={() => addField("reason")}
-                        className="flex items-center gap-1 text-sm bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700"
+                        className="btn btn-success"
                       >
                         <PlusCircle size={16} /> Reason
                       </button>
@@ -512,7 +504,7 @@ const IdeaForm = () => {
                           key={type}
                           type="button"
                           onClick={() => addField(type.toLowerCase())}
-                          className="flex items-center gap-1 text-sm bg-purple-600 text-white px-3 py-1 rounded hover:bg-purple-700"
+                          className="btn btn-secondary"
                         >
                           <PlusCircle size={16} /> {type}
                         </button>
@@ -526,22 +518,19 @@ const IdeaForm = () => {
                       <div key={fieldId} className="flex gap-2">
                         <div className="flex-1">
                           <label className="block text-sm font-medium text-gray-300 mb-2">
-                            {field.type.charAt(0).toUpperCase() +
-                              field.type.slice(1)}
+                            {field.type.charAt(0).toUpperCase() + field.type.slice(1)}
                           </label>
                           <input
                             type="text"
                             value={field.value}
-                            onChange={(e) =>
-                              handleDynamicFieldChange(fieldId, e.target.value)
-                            }
-                            className="w-full bg-gray-700 border border-gray-600 rounded-md py-2 px-3 text-white"
+                            onChange={(e) => handleDynamicFieldChange(fieldId, e.target.value)}
+                            className="input-field"
                           />
                         </div>
                         <button
                           type="button"
                           onClick={() => removeField(fieldId)}
-                          className="self-end bg-red-600 text-white p-2 rounded hover:bg-red-700"
+                          className="btn btn-danger self-end"
                         >
                           <X size={20} />
                         </button>
@@ -552,23 +541,19 @@ const IdeaForm = () => {
 
                 {/* Number of Ideas Input */}
                 <div>
-                  <label
-                    htmlFor="number_of_ideas"
-                    className="block text-sm font-medium text-gray-300 mb-2"
-                  >
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
                     Number of Ideas{" "}
                     {!hasManuallySetIdeas && "(Auto-populated based on fields)"}
                   </label>
                   <div className="flex items-center gap-4">
                     <input
                       type="number"
-                      id="number_of_ideas"
                       name="number_of_ideas"
                       value={formData.number_of_ideas}
                       onChange={handleBaseFieldChange}
                       min="1"
                       required
-                      className="w-full md:w-1/4 bg-gray-700 border border-gray-600 rounded-md py-2 px-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-300"
+                      className="input-field w-full md:w-1/4"
                     />
                     {hasManuallySetIdeas && (
                       <button
@@ -580,21 +565,16 @@ const IdeaForm = () => {
                       </button>
                     )}
                   </div>
-                  <p className="mt-1 text-sm text-gray-400">
-                    {hasManuallySetIdeas
-                      ? "Manually set value"
-                      : "Value updates automatically based on filled fields"}
-                  </p>
                 </div>
 
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full bg-indigo-600 text-white py-2 px-4 rounded-md font-medium hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="btn btn-primary w-full"
                 >
                   {isLoading ? (
                     <div className="flex items-center justify-center">
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                      <div className="loading-spinner mr-2"></div>
                       Generating...
                     </div>
                   ) : (
@@ -604,39 +584,33 @@ const IdeaForm = () => {
               </form>
             </div>
           ) : showImageGeneration ? (
-            <div className="bg-gray-800 rounded-lg shadow-xl p-6 space-y-6 animate-fade-in">
+            <div className="form-card animate-fade-in">
               <div className="flex justify-between items-center mb-6">
                 <h3 className="text-2xl font-bold text-white">
                   Generate Images for Accepted Ideas
                 </h3>
-                <button
-                  onClick={handleBackToIdeas}
-                  className="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700"
-                >
+                <button onClick={handleBackToIdeas} className="btn btn-secondary">
+                  <ArrowLeft size={16} />
                   Back to Ideas
                 </button>
               </div>
+
               <div className="space-y-6">
                 {acceptedIdeas.map((idea) => {
                   const ideaId = idea.idea_id.toString();
                   return (
-                    <div
-                      key={ideaId}
-                      className="bg-gray-700 rounded-lg p-6 border border-indigo-500"
-                    >
+                    <div key={ideaId} className="idea-card idea-card-accepted">
                       <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
                         <div className="flex-1">
                           <h4 className="text-xl font-semibold text-white mb-2">
                             {idea.product_name}
                           </h4>
-                          <p className="text-gray-300 mb-4">
-                            {idea.description}
-                          </p>
+                          <p className="text-gray-300 mb-4">{idea.description}</p>
                           <div className="flex gap-2">
                             {generatedImages[ideaId] && (
                               <button
                                 onClick={() => handleRegenerateImage(ideaId)}
-                                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors duration-300 flex items-center gap-2"
+                                className="btn btn-primary"
                                 disabled={loadingStates[ideaId]}
                               >
                                 <RotateCw size={16} />
@@ -657,7 +631,7 @@ const IdeaForm = () => {
                           ) : (
                             <div className="flex items-center justify-center h-full">
                               {loadingStates[ideaId] ? (
-                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+                                <div className="loading-spinner"></div>
                               ) : (
                                 <span className="text-gray-400">
                                   Image pending generation
@@ -670,23 +644,18 @@ const IdeaForm = () => {
                     </div>
                   );
                 })}
-                
               </div>
             </div>
           ) : (
-            <div className="bg-gray-800 rounded-lg shadow-xl p-6 space-y-6 animate-fade-in">
+            <div className="form-card animate-fade-in">
               <div className="flex justify-between items-center">
-                <h3 className="text-2xl font-bold text-white">
-                  Generated Ideas
-                </h3>
-                <button
-                  onClick={handleBackToForm}
-                  className="flex items-center gap-2 bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition-colors duration-300"
-                >
+                <h3 className="text-2xl font-bold text-white">Generated Ideas</h3>
+                <button onClick={handleBackToForm} className="btn btn-secondary">
                   <ArrowLeft size={16} />
                   Back to Form
                 </button>
               </div>
+
               <div className="space-y-6">
                 {ideas.map((idea) => {
                   const ideaId = idea.idea_id.toString();
@@ -698,9 +667,9 @@ const IdeaForm = () => {
                   return (
                     <div
                       key={ideaId}
-                      className={`bg-gray-700 rounded-lg p-6 border ${
-                        isAccepted ? "border-green-500" : "border-indigo-500"
-                      } transition-colors duration-300`}
+                      className={`idea-card ${
+                        isAccepted ? "idea-card-accepted" : "idea-card-pending"
+                      }`}
                     >
                       <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
                         <div className="flex-1">
@@ -715,7 +684,7 @@ const IdeaForm = () => {
                                   name="product_name"
                                   value={editForm.product_name}
                                   onChange={handleEditChange}
-                                  className="w-full bg-gray-600 border border-gray-500 rounded-md py-2 px-3 text-white"
+                                  className="input-field"
                                 />
                               </div>
                               <div>
@@ -727,19 +696,19 @@ const IdeaForm = () => {
                                   value={editForm.description}
                                   onChange={handleEditChange}
                                   rows={3}
-                                  className="w-full bg-gray-600 border border-gray-500 rounded-md py-2 px-3 text-white"
+                                  className="input-field"
                                 />
                               </div>
                               <div className="flex gap-2">
                                 <button
                                   onClick={() => handleUpdateIdea(idea.idea_id)}
-                                  className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors duration-300 flex items-center gap-2"
+                                  className="btn btn-success"
                                 >
                                   <Check size={16} /> Save
                                 </button>
                                 <button
                                   onClick={() => setEditingIdea(null)}
-                                  className="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition-colors duration-300"
+                                  className="btn btn-secondary"
                                 >
                                   Cancel
                                 </button>
@@ -757,27 +726,27 @@ const IdeaForm = () => {
                                 {isAccepted ? (
                                   <button
                                     onClick={() => handleUnaccept(idea.idea_id)}
-                                    className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors duration-300 flex items-center gap-2"
+                                    className="btn btn-success"
                                   >
                                     <Check size={16} /> Accepted
                                   </button>
                                 ) : (
                                   <button
                                     onClick={() => handleAccept(idea.idea_id)}
-                                    className="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition-colors duration-300 flex items-center gap-2"
+                                    className="btn btn-secondary"
                                   >
                                     Accept
                                   </button>
                                 )}
                                 <button
                                   onClick={() => handleEdit(idea)}
-                                  className="bg-yellow-600 text-white px-4 py-2 rounded-md hover:bg-yellow-700 transition-colors duration-300 flex items-center gap-2"
+                                  className="btn btn-warning"
                                 >
                                   <Edit2 size={16} /> Edit
                                 </button>
                                 <button
                                   onClick={() => handleReject(idea.idea_id)}
-                                  className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors duration-300 flex items-center gap-2"
+                                  className="btn btn-danger"
                                 >
                                   <X size={16} /> Reject
                                 </button>
@@ -791,16 +760,13 @@ const IdeaForm = () => {
                 })}
               </div>
 
-              <div className="flex justify-between items-center gap-4">
-                <button
-                  onClick={handleNewIdea}
-                  className="flex-1 bg-transparent border border-indigo-500 text-white py-2 px-4 rounded-md font-medium hover:bg-indigo-500 transition-all duration-300"
-                >
+              <div className="flex justify-between items-center gap-4 mt-6">
+                <button onClick={handleNewIdea} className="btn btn-secondary flex-1">
                   Generate New Ideas
                 </button>
                 <button
                   onClick={handleProceedToImages}
-                  className="flex-1 bg-indigo-600 text-white py-2 px-4 rounded-md font-medium hover:bg-indigo-700 transition-all duration-300 flex items-center justify-center gap-2"
+                  className="btn btn-primary flex-1"
                   disabled={acceptedIdeas.length === 0}
                 >
                   <Image size={20} />
@@ -811,10 +777,7 @@ const IdeaForm = () => {
           )}
 
           {error && (
-            <div
-              className="bg-red-900 text-white px-4 py-3 rounded-lg"
-              role="alert"
-            >
+            <div className="bg-red-900 text-white px-4 py-3 rounded-lg" role="alert">
               <p className="font-medium">{error}</p>
             </div>
           )}
