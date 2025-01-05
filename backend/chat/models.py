@@ -27,6 +27,8 @@ class Document(models.Model):
 
     def __str__(self):
         return self.filename
+    class Meta:
+        app_label = 'chat'
 class ProcessedIndex(models.Model):
     document = models.OneToOneField(Document, on_delete=models.CASCADE)
     faiss_index = models.CharField(max_length=255, help_text="Path to saved FAISS index file")
@@ -40,6 +42,8 @@ class ProcessedIndex(models.Model):
 
     def __str__(self):
         return f"Processed Index for {self.document.filename}"
+    class Meta:
+        app_label = 'chat'
 
 class ChatMessage(models.Model):
     ROLE_CHOICES = (
@@ -56,6 +60,7 @@ class ChatMessage(models.Model):
 
     class Meta:
         ordering = ['created_at']
+        app_label = 'chat'
 
     def __str__(self):
         return f"{self.role}: {self.content[:50]}"
@@ -78,6 +83,7 @@ class ChatHistory(models.Model):
     class Meta:
         ordering = ['-created_at']
         verbose_name_plural = 'Chat Histories'
+        app_label = 'chat'
 
     def __str__(self):
         return f"{self.user.username} - {self.title or 'Untitled Chat'}"
@@ -161,3 +167,5 @@ class ConversationMemoryBuffer(models.Model):
             return "Unable to generate conversation summary"
 
 
+    class Meta:
+        app_label = 'chat'
