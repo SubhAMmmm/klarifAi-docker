@@ -1,7 +1,10 @@
 //4-1-25
 /* eslint-disable no-unused-vars */
+
+//IdeaForm.jsx
 import React, { useState, useCallback, useEffect } from "react";
 import { ideaService } from "../utils/axiosConfig";
+import AdvancedRegenControls from '../components/AdvancedRegenControls';
 
 import {
   PlusCircle,
@@ -223,46 +226,47 @@ const IdeaForm = () => {
     }
   };
 
-  const handleRegenerateImage = useCallback(async (ideaId) => {
-  if (loadingStates[ideaId]) return;
-
-  setLoadingStates((prev) => ({ ...prev, [ideaId]: true }));
-  setError(null);
-
-  try {
-    const idea = acceptedIdeas.find((i) => i.idea_id === ideaId);
-    if (!idea) throw new Error("Idea not found");
-
-    const response = await ideaService.regenerateProductImage({
-      description: `${idea.product_name}: ${idea.description}`,
-      idea_id: ideaId,
-      size: 768,
-      steps: 30,
-      guidance_scale: 7.5
-    });
-
-    if (response.data.success) {
-      setGeneratedImages((prev) => ({
-        ...prev,
-        [ideaId]: `data:image/png;base64,${response.data.image}`,
-      }));
-      
-      // Optional: Add a toast or notification for successful regeneration
-      // You can implement this with a toast library or custom notification
-      console.log(`Image regenerated successfully for idea ${ideaId}`);
-    } else {
-      throw new Error(response.data.error || "Failed to regenerate image");
-    }
-  } catch (err) {
-    console.error("Image regeneration error:", err);
-    setError(err.response?.data?.error || err.message || "Failed to regenerate image");
+  const handleRegenerateImage = useCallback(async (params) => {
+    // If params is not an object (old way), convert it to the expected format
+    const ideaId = typeof params === 'object' ? params.idea_id : params;
     
-    // Optional: Show a user-friendly error notification
-    // You can implement this with a toast library or custom notification
-  } finally {
-    setLoadingStates((prev) => ({ ...prev, [ideaId]: false }));
-  }
-}, [acceptedIdeas, loadingStates]);
+    if (loadingStates[ideaId]) return;
+    
+    setLoadingStates((prev) => ({ ...prev, [ideaId]: true }));
+    setError(null);
+  
+    try {
+      // Find the idea from acceptedIdeas if not provided in params
+      const idea = acceptedIdeas.find((i) => i.idea_id === ideaId);
+      if (!idea) throw new Error("Idea not found");
+  
+      const description = typeof params === 'object' ? 
+        params.description : 
+        `${idea.product_name}: ${idea.description}`;
+  
+      const response = await ideaService.regenerateProductImage({
+        description: description,
+        idea_id: ideaId,
+        size: params.size || 768,
+        steps: params.steps || 30,
+        guidance_scale: params.guidance_scale || 7.5
+      });
+  
+      if (response.data.success) {
+        setGeneratedImages((prev) => ({
+          ...prev,
+          [ideaId]: `data:image/png;base64,${response.data.image}`,
+        }));
+      } else {
+        throw new Error(response.data.error || "Failed to regenerate image");
+      }
+    } catch (err) {
+      console.error("Image regeneration error:", err);
+      setError(err.response?.data?.error || err.message || "Failed to regenerate image");
+    } finally {
+      setLoadingStates((prev) => ({ ...prev, [ideaId]: false }));
+    }
+  }, [acceptedIdeas, loadingStates]);
 
   const handleBaseFieldChange = (e) => {
     const { name, value } = e.target;
@@ -364,14 +368,20 @@ const IdeaForm = () => {
   // Simplified sequential image generation
   const generateImagesSequentially = useCallback(async () => {
     if (imageGenerationInProgress) return;
-
+  
     setImageGenerationInProgress(true);
     setError(null);
-
+  
     try {
       for (const idea of acceptedIdeas) {
         if (!generatedImages[idea.idea_id]) {
-          await handleRegenerateImage(idea.idea_id);
+          await handleRegenerateImage({
+            idea_id: idea.idea_id,
+            description: `${idea.product_name}: ${idea.description}`,
+            size: 768,
+            steps: 30,
+            guidance_scale: 7.5
+          });
           // Add a delay between image generations
           await new Promise((resolve) => setTimeout(resolve, 6000)); // 6 seconds delay
         }
@@ -608,14 +618,11 @@ const IdeaForm = () => {
                           <p className="text-gray-300 mb-4">{idea.description}</p>
                           <div className="flex gap-2">
                             {generatedImages[ideaId] && (
-                              <button
-                                onClick={() => handleRegenerateImage(ideaId)}
-                                className="btn btn-primary"
-                                disabled={loadingStates[ideaId]}
-                              >
-                                <RotateCw size={16} />
-                                Regenerate Image
-                              </button>
+                              <AdvancedRegenControls
+                                idea={idea}
+                                onRegenerate={handleRegenerateImage}
+                                isLoading={loadingStates[ideaId]}
+                              />
                             )}
                           </div>
                         </div>
