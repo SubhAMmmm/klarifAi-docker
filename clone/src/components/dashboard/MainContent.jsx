@@ -1,4 +1,3 @@
-
 // 11-12-24
 // MainContent.jsx
 /* eslint-disable no-unused-vars */
@@ -260,23 +259,30 @@ const MainContent = ({
     }
 
     return (
-      <div className="absolute inset-0 pt-16 bg-black flex flex-col overflow-hidden transition-all duration-300 ease-in-out ">
+      <div className="absolute inset-0 pt-16 backdrop-blur-xl flex flex-col overflow-hidden transition-all duration-300 ease-in-out ">
         <div className="flex-1 overflow-hidden">
           <div className="h-full w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-            <div
-              className="h-full flex flex-col 
-                bg-gray-800/20 
-                border 
-                border-blue-500/10 
-                rounded-3xl 
-                shadow-2xl 
-                overflow-hidden 
-                ring-1 
-                ring-blue-500/5
-                backdrop-blur-sm
-                transition-all
-                duration-300"
-            >
+  <div
+    className="
+      h-full 
+      flex 
+      flex-col 
+      bg-gradient-to-br 
+      from-gray-900/80 
+      via-gray-800/80 
+      to-gray-900/80 
+      border 
+      border-blue-500/20 
+      rounded-3xl 
+      shadow-2xl 
+      overflow-hidden 
+      ring-1 
+      ring-emerald-500/10
+      backdrop-blur-xl
+      transition-all
+      duration-300
+    "
+  >
               {/* Header with Document Selector */}
               <div
                 className="px-4 sm:px-6 py-3 sm:py-2
@@ -317,7 +323,7 @@ const MainContent = ({
               </div>
 
               {/* Summary Content */}
-              <div className="flex-1 overflow-y-auto custom-scrollbar  bg-gray-800/20">
+              <div className="flex-1 overflow-y-auto custom-scrollbar  bg-gray-900/80">
                 <SummaryFormatter content={selectedDocument.summary} />
               </div>
             </div>
@@ -345,36 +351,36 @@ const MainContent = ({
       const chatMessages = Array.isArray(selectedChat.messages)
         ? selectedChat.messages
         : [];
-  
+
       // Ensure messages are sorted chronologically
       const sortedMessages = chatMessages.sort(
         (a, b) => new Date(a.created_at) - new Date(b.created_at)
       );
-  
+
       // Create a new array with unique messages
       const uniqueMessages = Array.from(
         new Set(sortedMessages.map(JSON.stringify))
       ).map(JSON.parse);
-  
+
       // Set conversation with unique messages
       setConversation(uniqueMessages);
-  
+
       // Set summary with fallback
       setSummary(selectedChat.summary || "");
-  
+
       // Ensure follow-up questions is an array
       const followUpQuestions = Array.isArray(selectedChat.follow_up_questions)
         ? selectedChat.follow_up_questions
         : selectedChat.follow_up_questions
         ? [selectedChat.follow_up_questions]
         : [];
-  
+
       setCurrentFollowUpQuestions(followUpQuestions);
       setFollowUpQuestions(followUpQuestions);
-  
+
       // Set conversation ID
       setConversationId(selectedChat.conversation_id);
-  
+
       // Handle document selection
       if (
         selectedChat.selected_documents &&
@@ -384,7 +390,7 @@ const MainContent = ({
           doc.toString()
         );
         setLocalSelectedDocuments(documentIds);
-  
+
         if (setSelectedDocuments) {
           setSelectedDocuments(documentIds);
         }
@@ -971,29 +977,31 @@ const MainContent = ({
   const cleanupConversation = (messages) => {
     const uniqueMessages = [];
     const seenMessages = new Set();
-  
+
     messages.forEach((message, index) => {
       // Create a unique key for the message
       const messageKey = JSON.stringify({
         role: message.role,
         content: message.content,
         // Add index to ensure uniqueness of assistant messages
-        index: index
+        index: index,
       });
-  
+
       // For assistant messages, only keep the most recent one after a user message
-      if (message.role === 'assistant') {
+      if (message.role === "assistant") {
         // Find the last user message before this assistant message
-        const lastUserMessageIndex = messages.slice(0, index).reverse()
-          .findIndex(m => m.role === 'user');
-        
+        const lastUserMessageIndex = messages
+          .slice(0, index)
+          .reverse()
+          .findIndex((m) => m.role === "user");
+
         if (lastUserMessageIndex !== -1) {
           const messageKey = JSON.stringify({
             role: message.role,
             content: message.content,
-            userMessageIndex: index - lastUserMessageIndex - 1
+            userMessageIndex: index - lastUserMessageIndex - 1,
           });
-  
+
           if (!seenMessages.has(messageKey)) {
             uniqueMessages.push(message);
             seenMessages.add(messageKey);
@@ -1010,148 +1018,165 @@ const MainContent = ({
         }
       }
     });
-  
+
     return uniqueMessages;
   };
 
   // Add this method to handle message updates
-const handleMessageUpdate = async (messageIndex, newContent) => {
-  if (newContent === conversation[messageIndex].content) {
-    setEditingMessageId(null);
-    return;
-  }
-
-  setIsLoading(true);
-
-  try {
-    // Store the original message and its response if not already stored
-    if (!messageHistory[messageIndex]) {
-      const originalMessage = conversation[messageIndex];
-      const originalResponse = conversation[messageIndex + 1];
-      const subsequentMessages = conversation.slice(messageIndex + 2);
-      storeMessageHistory(messageIndex, originalMessage.content, originalResponse, subsequentMessages);
+  const handleMessageUpdate = async (messageIndex, newContent) => {
+    if (newContent === conversation[messageIndex].content) {
+      setEditingMessageId(null);
+      return;
     }
 
-    // Create a new conversation array up to the edited message
-    const conversationUpToEdit = conversation.slice(0, messageIndex + 1);
-    
-    // Update the edited message
-    const updatedMessage = {
-      ...conversationUpToEdit[messageIndex],
-      content: newContent,
-      edited: true,
-      editedAt: new Date().toISOString()
-    };
-    
-    conversationUpToEdit[messageIndex] = updatedMessage;
+    setIsLoading(true);
 
-    // Update conversation state immediately for better UX
-    setConversation(conversationUpToEdit);
+    try {
+      // Store the original message and its response if not already stored
+      if (!messageHistory[messageIndex]) {
+        const originalMessage = conversation[messageIndex];
+        const originalResponse = conversation[messageIndex + 1];
+        const subsequentMessages = conversation.slice(messageIndex + 2);
+        storeMessageHistory(
+          messageIndex,
+          originalMessage.content,
+          originalResponse,
+          subsequentMessages
+        );
+      }
 
-    // Prepare request data for the API
-    const requestData = {
-      message: newContent,
-      conversation_id: conversationId,
-      selected_documents: localSelectedDocuments,
-      context: conversationUpToEdit
-    };
+      // Create a new conversation array up to the edited message
+      const conversationUpToEdit = conversation.slice(0, messageIndex + 1);
 
-    const response = await chatService.sendMessage(requestData);
+      // Update the edited message
+      const updatedMessage = {
+        ...conversationUpToEdit[messageIndex],
+        content: newContent,
+        edited: true,
+        editedAt: new Date().toISOString(),
+      };
 
-    // Add the new assistant response
-    const assistantMessage = {
-      role: "assistant",
-      content: response.response || "No response received",
-      citations: response.citations || [],
-      follow_up_questions: response.follow_up_questions || []
-    };
+      conversationUpToEdit[messageIndex] = updatedMessage;
 
-    const finalConversation = [...conversationUpToEdit, assistantMessage];
+      // Update conversation state immediately for better UX
+      setConversation(conversationUpToEdit);
 
-    setConversation(finalConversation);
-    setEditingMessageId(null);
+      // Prepare request data for the API
+      const requestData = {
+        message: newContent,
+        conversation_id: conversationId,
+        selected_documents: localSelectedDocuments,
+        context: conversationUpToEdit,
+      };
 
-    // Update follow-up questions if available
-    if (response.follow_up_questions?.length > 0) {
-      setCurrentFollowUpQuestions(response.follow_up_questions);
-      setFollowUpQuestions(response.follow_up_questions);
+      const response = await chatService.sendMessage(requestData);
+
+      // Add the new assistant response
+      const assistantMessage = {
+        role: "assistant",
+        content: response.response || "No response received",
+        citations: response.citations || [],
+        follow_up_questions: response.follow_up_questions || [],
+      };
+
+      const finalConversation = [...conversationUpToEdit, assistantMessage];
+
+      setConversation(finalConversation);
+      setEditingMessageId(null);
+
+      // Update follow-up questions if available
+      if (response.follow_up_questions?.length > 0) {
+        setCurrentFollowUpQuestions(response.follow_up_questions);
+        setFollowUpQuestions(response.follow_up_questions);
+      }
+    } catch (error) {
+      console.error("Failed to update message:", error);
+      toast.error(
+        error.response?.data?.error ||
+          "Failed to update message. Please try again."
+      );
+      // Restore the original conversation state
+      setConversation(conversation);
+    } finally {
+      setIsLoading(false);
     }
-
-  } catch (error) {
-    console.error("Failed to update message:", error);
-    toast.error(error.response?.data?.error || "Failed to update message. Please try again.");
-    // Restore the original conversation state
-    setConversation(conversation);
-  } finally {
-    setIsLoading(false);
-  }
-};
+  };
   // Add this method to your component
-  const storeMessageHistory = (messageIndex, originalMessage, originalResponse, subsequentMessages) => {
-    setMessageHistory(prev => ({
+  const storeMessageHistory = (
+    messageIndex,
+    originalMessage,
+    originalResponse,
+    subsequentMessages
+  ) => {
+    setMessageHistory((prev) => ({
       ...prev,
       [messageIndex]: {
         message: originalMessage,
         response: originalResponse,
-        subsequentMessages: subsequentMessages
-      }
+        subsequentMessages: subsequentMessages,
+      },
     }));
   };
   // Add this method to handle message reversion
-const handleMessageRevert = (messageIndex, originalMessage, originalResponse, subsequentMessages) => {
-  const historyEntry = messageHistory[messageIndex];
-  
-  if (historyEntry) {
-    // Create the reverted conversation
-    const conversationUpToRevert = conversation.slice(0, messageIndex);
-    
-    const revertedMessage = {
-      ...conversation[messageIndex],
-      content: originalMessage,
-      edited: false
-    };
-    
-    let updatedConversation = [
-      ...conversationUpToRevert,
-      revertedMessage,
-      originalResponse,
-      ...(subsequentMessages || [])
-    ];
-    
-    setConversation(updatedConversation);
-    
-    // Remove this entry from message history
-    const updatedHistory = { ...messageHistory };
-    delete updatedHistory[messageIndex];
-    setMessageHistory(updatedHistory);
-    
-    toast.success("Message reverted to original version");
-  }
-};
+  const handleMessageRevert = (
+    messageIndex,
+    originalMessage,
+    originalResponse,
+    subsequentMessages
+  ) => {
+    const historyEntry = messageHistory[messageIndex];
+
+    if (historyEntry) {
+      // Create the reverted conversation
+      const conversationUpToRevert = conversation.slice(0, messageIndex);
+
+      const revertedMessage = {
+        ...conversation[messageIndex],
+        content: originalMessage,
+        edited: false,
+      };
+
+      let updatedConversation = [
+        ...conversationUpToRevert,
+        revertedMessage,
+        originalResponse,
+        ...(subsequentMessages || []),
+      ];
+
+      setConversation(updatedConversation);
+
+      // Remove this entry from message history
+      const updatedHistory = { ...messageHistory };
+      delete updatedHistory[messageIndex];
+      setMessageHistory(updatedHistory);
+
+      toast.success("Message reverted to original version");
+    }
+  };
 
   // Add a useEffect to further clean up conversation on initial load
-useEffect(() => {
-  if (conversation.length > 0) {
-    const cleanedConversation = cleanupConversation(conversation);
-    if (cleanedConversation.length !== conversation.length) {
-      setConversation(cleanedConversation);
+  useEffect(() => {
+    if (conversation.length > 0) {
+      const cleanedConversation = cleanupConversation(conversation);
+      if (cleanedConversation.length !== conversation.length) {
+        setConversation(cleanedConversation);
+      }
     }
-  }
-}, [conversation]);
-  
+  }, [conversation]);
 
   return (
     <div
-      className="flex-1 h-screen w-full overflow-hidden bg-black relative
+      className="flex-1 h-screen w-full overflow-hidden backdrop-blur-lg relative
         transition-all 
         duration-300 
-        ease-in-out"
+        ease-in-out
+        "
     >
       {/* Header with View Toggle */}
       <div
         className="absolute top-16 left-0 right-0 z-40 
         bg-opacity-100
-        bg-black
+        backdrop-blur-xl
         border-b
         border-blue-500/10 
         py-2
@@ -1198,16 +1223,16 @@ useEffect(() => {
       <div className="absolute inset-0 top-16 overflow-hidden">
         {currentView === "chat" ? (
           <div
-            className="flex flex-col h-full w-full bg-black 
+            className="flex flex-col h-full w-full backdrop-blur-xl 
             top-16
             rounded-t-3xl 
             overflow-hidden 
-            backdrop-blur-sm"
+          "
           >
             {/* Chat Messages */}
             <div
               ref={chatContainerRef}
-              className={`flex-1 overflow-y-auto p-2 sm:p-4 bg-black space-y-2
+              className={`flex-1 overflow-y-auto p-2 sm:p-4 backdrop-blur-lg
                         sm:space-y-4
                         custom-scrollbar
                         pb-[100px] flex flex-col space-y-4 transition-all duration-300 ease-in-out 
@@ -1217,51 +1242,75 @@ useEffect(() => {
             >
               {/* Rest of the chat messages rendering code */}
               {conversation.map((msg, index) => (
-                  <React.Fragment key={index}>
+                <React.Fragment key={index}>
+                  <div
+                    className={`flex ${
+                      msg.role === "user"
+                        ? "justify-end mt-16"
+                        : "justify-start"
+                    }`}
+                  >
                     <div
-                      className={`flex ${
-                        msg.role === "user"
-                          ? "justify-end mt-16"
-                          : "justify-start"
-                      }`}
+                      className={`
+      p-4 
+      rounded-lg 
+      backdrop-blur-md
+      border
+      shadow-lg
+      ${
+        msg.role === "user"
+          ? "bg-gradient-to-r from-blue-600/30 to-emerald-600/30 text-white max-w-[70%] border-emerald-500/20"
+          : "bg-gradient-to-r from-gray-800/70 to-gray-900/70 text-white max-w-full border-blue-500/20"
+      }
+      transition-all 
+      duration-300 
+      hover:shadow-xl
+      hover:border-opacity-50
+    `}
                     >
-                      <div
-                        className={` p-4 rounded-lg ${
-                          msg.role === "user"
-                            ? "bg-blue-500/20 text-white max-w-[70%]"
-                            : "bg-gray-800/50  text-white max-w-full"
-                        }`}
-                      >
-                        <div className="flex items-center mb-2">
-                          {msg.role === "user" ? (
-                            <User className="mr-2 h-5 w-5" />
-                          ) : (
-                            <Bot className="mr-2 h-5 w-5" />
-                          )}
-                          <span className="font-bold">
-                            {msg.role === "user" ? "You" : "Assistant"}
-                          </span>
-                        </div>
+                      <div className="flex items-center mb-2">
                         {msg.role === "user" ? (
-                          <EditableMessage
-                            content={msg.content}
-                            isEditing={editingMessageId === index}
-                            setIsEditing={(isEditing) => setEditingMessageId(isEditing ? index : null)}
-                            onSave={(newContent) => handleMessageUpdate(index, newContent)}
-                            onRevert={(originalMessage, originalResponse, subsequentMessages) => 
-                              handleMessageRevert(index, originalMessage, originalResponse, subsequentMessages)
-                            }
-                            disabled={isLoading}
-                            messageIndex={index}
-                            messageHistory={messageHistory}
-                          />
+                          <User className="mr-2 h-5 w-5" />
                         ) : (
-                          renderMessage(msg)
+                          <Bot className="mr-2 h-5 w-5" />
                         )}
+                        <span className="font-bold">
+                          {msg.role === "user" ? "You" : "Assistant"}
+                        </span>
                       </div>
+                      {msg.role === "user" ? (
+                        <EditableMessage
+                          content={msg.content}
+                          isEditing={editingMessageId === index}
+                          setIsEditing={(isEditing) =>
+                            setEditingMessageId(isEditing ? index : null)
+                          }
+                          onSave={(newContent) =>
+                            handleMessageUpdate(index, newContent)
+                          }
+                          onRevert={(
+                            originalMessage,
+                            originalResponse,
+                            subsequentMessages
+                          ) =>
+                            handleMessageRevert(
+                              index,
+                              originalMessage,
+                              originalResponse,
+                              subsequentMessages
+                            )
+                          }
+                          disabled={isLoading}
+                          messageIndex={index}
+                          messageHistory={messageHistory}
+                        />
+                      ) : (
+                        renderMessage(msg)
+                      )}
                     </div>
-                  </React.Fragment>
-                ))}
+                  </div>
+                </React.Fragment>
+              ))}
 
               {isLoading && (
                 <div className="text-center text-white">
@@ -1282,16 +1331,22 @@ useEffect(() => {
                 "
               >
                 <div
-                  className="
-                    bg-gradient-to-b from-blue-500/20
-                    backdrop-blur-lg
-                    rounded-t-2xl 
-                    sm:rounded-t-3xl 
-                    shadow-2xl 
-                    overflow-hidden
-                    relative 
-                  "
-                >
+  className="
+    bg-gradient-to-b 
+    from-gray-900/80 
+    via-gray-800/80 
+    to-gray-900/80
+    backdrop-blur-xl 
+    rounded-t-2xl 
+    sm:rounded-t-3xl 
+    shadow-2xl 
+    overflow-hidden
+    relative 
+    border-t 
+    border-blue-500/20
+  "
+>
+
                   <div className="flex justify-center mb-1 py-1">
                     <button
                       onClick={toggleFollowUpQuestions}
@@ -1327,29 +1382,33 @@ useEffect(() => {
                 {/* Input Area */}
 
                 <div
-                  className="
-                    
-                      backdrop-blur-xl 
-                      backdrop-blur-lg 
-                      rounded-b-2xl
-                      sm:rounded-b-3xl  
-                      shadow-2xl 
-                      p-2 
-                      sm:p-4
-                      relative
-                    "
-                >
+  className="
+    bg-gradient-to-b 
+    from-gray-900/90 
+    to-gray-800/90
+    backdrop-blur-xl 
+    rounded-b-2xl
+    sm:rounded-b-3xl  
+    shadow-2xl 
+    p-2 
+    sm:p-4
+    relative
+    border-t 
+    border-blue-500/10
+  "
+>
                   <div className="flex items-center gap-2 max-w-full">
                     <div className="flex-1 relative">
                       <input
                         type="text"
                         value={message}
                         onChange={(e) => setMessage(e.target.value)}
-                        onKeyPress={(e) =>
-                          e.key === "Enter" &&
-                          !e.shiftKey &&
-                          handleSendMessage()
-                        }
+                        onKeyPress={(e) => {
+                          if (e.key === "Enter" && !e.shiftKey) {
+                            e.preventDefault(); // Prevent default form submission
+                            handleSendMessage(message); // Pass the message value explicitly
+                          }
+                        }}
                         placeholder="Type your message..."
                         className="
                           w-full 
@@ -1490,15 +1549,15 @@ useEffect(() => {
                 width: 6px;
             }
             .custom-scrollbar::-webkit-scrollbar-track {
-                background: rgba(255,255,255,0.1);
+                background: rgba(16, 185, 129, 0.1);
                 border-radius: 10px;
             }
             .custom-scrollbar::-webkit-scrollbar-thumb {
-                background: rgba(255,255,255,0.2);
+                background: rgba(16, 185, 129, 0.2);
                 border-radius: 10px;
             }
             .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-                background: rgba(255,255,255,0.3);
+                 background: rgba(16, 185, 129, 0.3);
             }
             .group:hover .opacity-0 {
               opacity: 1;
@@ -1545,5 +1604,3 @@ MainContent.propTypes = {
 };
 
 export default MainContent;
-
-

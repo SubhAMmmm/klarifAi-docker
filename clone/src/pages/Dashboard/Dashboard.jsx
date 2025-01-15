@@ -6,6 +6,7 @@ import { Menu, ChevronRight, ChevronLeft, X } from 'lucide-react';
 import Header from '../../components/dashboard/Header';
 import Sidebar from '../../components/dashboard/Sidebar';
 import MainContent from '../../components/dashboard/MainContent';
+import backgroundImage from '../../assets/bg-main.jpg';
 
 const Dashboard = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -90,6 +91,16 @@ const Dashboard = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-black overflow-hidden">
+      <div className="fixed inset-0 w-full h-full bg-cover bg-center bg-no-repeat z-0"
+                      style={{
+                          backgroundImage: `url(${backgroundImage})`,
+                          backgroundSize: 'cover',
+                          backgroundPosition: 'center',
+                      }}
+                      role="img"
+                      aria-label="Background"
+                  />
+                  <div className="absolute inset-0 bg-black/50 backdrop-blur-[2px]"></div>
       <Header />
       
       <div className="flex flex-1 relative ">

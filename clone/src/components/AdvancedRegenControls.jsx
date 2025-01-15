@@ -59,7 +59,8 @@ const AdvancedRegenControls = ({
     <div className="flex gap-2">
       <button
         onClick={handleQuickRegenerate}
-        className="btn btn-primary"
+        className="btn btn-secondary bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white"
+        title='Regenerate Image'
         disabled={isLoading}
       >
         {isLoading ? (
@@ -70,16 +71,14 @@ const AdvancedRegenControls = ({
         ) : (
           <>
             <RotateCw size={16} />
-            Quick Regenerate
           </>
         )}
       </button>
       
       <Dialog open={showAdvanced} onOpenChange={setShowAdvanced}>
         <DialogTrigger asChild>
-          <button className="btn btn-secondary" disabled={isLoading}>
+          <button className="btn btn-secondary bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700" disabled={isLoading} title='Advance Regenerate'>
             <Settings size={16} />
-            Advanced
           </button>
         </DialogTrigger>
         <DialogContent className="sm:max-w-xl">

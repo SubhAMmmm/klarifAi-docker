@@ -12,7 +12,8 @@ import StructruredDataQuery from '../components/StructruredDataQuery';
 import ForgotPasswordForm from '../components/auth/ForgotPasswordForm';
 import ResetPasswordForm from '../components/auth/ResetPasswordForm';
 import IdeaForm from '../components/IdeaForm';
-
+import ProjectsIdeaGen from '../components/ProjectsIdeaGen';
+import TopicModeling from '../components/TopicModeling';
 
 
 const AppRoutes = () => {
@@ -23,8 +24,9 @@ const AppRoutes = () => {
         <Route path="/forgot-password" element={<ForgotPasswordForm />} />
         <Route path="/reset-password" element={<ResetPasswordForm />} />
         <Route path="/landing" element={<LandingPage />} />
-        <Route path="/idea-generation" element={<IdeaForm />} />
+        <Route path="/idea-generation" element={<ProjectsIdeaGen/>} />
         <Route path="/structured-data-query" element={<StructruredDataQuery />} />
+        <Route path="/topic-modeling" element={<TopicModeling/>} />
 
         <Route path="/dashboard" element={
           <PrivateRoute>

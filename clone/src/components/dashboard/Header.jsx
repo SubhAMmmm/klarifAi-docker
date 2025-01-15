@@ -1,52 +1,3 @@
-// /* eslint-disable no-unused-vars */
-// import React from 'react';
-// import { LogOut } from 'lucide-react';
-// import { useNavigate } from 'react-router-dom';
-// import logo from '../../assets/Logo1.png';
-
-
-// const  Header = () => {
-//   const navigate = useNavigate();
-
-//   const handleLogout = () => {
-//     localStorage.removeItem('token');
-//     navigate('/auth');
-//   };
-
-//   return (
-//     <>
-//     <header className="fixed top-0 left-0 right-0 border-b border-gray-700 bg-gray-800 z-50">
-//       <div className="flex justify-between items-center px-4 py-2">
-//         <div className="flex items-center space-x-4">
-//           <img 
-//             src={logo} 
-//             alt="Logo" 
-//             className="h-12 w-auto"
-//           />
-//           <h5 className="hidden lg:block text-white text-lg">
-//             GPT-Powered Insights Activator
-//           </h5>
-//         </div>
-        
-//         <div className="flex items-center space-x-4 px-3">
-//           <img 
-//             src="/api/placeholder/40/40" 
-//             alt="Profile" 
-//             className="h-10 w-10 rounded-full border border-black"
-//           />
-//           <span className="text-white">{localStorage.getItem('username')}</span>
-//           <LogOut 
-//             className="h-5 w-5 text-white cursor-pointer" 
-//             onClick={handleLogout}
-//           />
-//         </div>
-//       </div>
-//     </header>
-//     </>
-//   );
-// };
-
-// export default Header;
 
 /* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from 'react';
@@ -143,6 +94,10 @@ const Header = () => {
     }
   };
 
+  const handleLogoClick = () => {
+    navigate('/landing'); // Navigate to the landing page
+  };
+
   // Render loading state
   if (isLoading) {
     return (
@@ -158,8 +113,7 @@ const Header = () => {
     <header 
       className="
         fixed top-0 left-0 right-0 
-        bg-gradient-to-tl from-gray-700/20
-        
+        bg-black
         z-50 shadow-md
       "
     >
@@ -169,11 +123,12 @@ const Header = () => {
           <img 
             src={logo} 
             alt="Logo" 
-            className="h-12 w-auto transition-transform hover:scale-105"
+            className="h-12 w-auto transition-transform hover:scale-105 cursor-pointer"
+            onClick={handleLogoClick}
+            onKeyDown={(e) => e.key === 'Enter' && handleLogoClick()}
+            tabIndex={0}
+            role="button"
           />
-          {/* <h5 className="hidden lg:block text-white text-lg font-semibold tracking-wider">
-            GPT-Powered Insights Activator
-          </h5> */}
         </div>
         
         {/* User Profile and Logout Section */}

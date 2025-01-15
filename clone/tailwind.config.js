@@ -7,6 +7,10 @@ export default {
   ],
   theme: {
   	extend: {
+		backdropBlur: {
+			'md': '12px',
+			'xl': '24px',
+		  },
   		borderRadius: {
   			lg: 'var(--radius)',
   			md: 'calc(var(--radius) - 2px)',

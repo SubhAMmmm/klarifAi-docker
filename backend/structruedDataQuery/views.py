@@ -25,9 +25,6 @@ import google.generativeai as genai
 
 logger = logging.getLogger(__name__)
 
-
-
-
 def get_api_key():
     """Retrieve Google API Key with multiple fallback methods"""
     # Try environment variable first

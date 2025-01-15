@@ -14,6 +14,9 @@ import io
 import base64
 from django.core.files.base import ContentFile
 from datetime import datetime
+from django.db.models import Q
+import os
+from django.conf import settings
  
 # API configurations
 GOOGLE_API_KEY = "AIzaSyC5Dqjx0DLbkRXH9YWqWZ1SPTK0w0C4oFY"
@@ -171,7 +174,6 @@ def generate_ideas(request):
             response["Access-Control-Allow-Origin"] = "http://localhost:5173"
             return response
 
-
 @csrf_exempt
 @require_http_methods(["PUT", "OPTIONS"])
 def update_idea(request):
@@ -188,29 +190,39 @@ def update_idea(request):
             data = json.loads(request.body)
             idea_id = data.get('idea_id')
             
-            # Get the idea instance
-            idea = get_object_or_404(Idea, id=idea_id)
+            # Get the original idea
+            original_idea = get_object_or_404(Idea, id=idea_id)
             
-            # Update the idea
-            idea.product_name = data.get('product_name', idea.product_name)
-            idea.description = data.get('description', idea.description)
-            idea.save()
+            # Create a new version instead of updating the existing one
+            new_idea = Idea.objects.create(
+                product_idea=original_idea.product_idea,
+                product_name=data.get('product_name', original_idea.product_name),
+                description=data.get('description', original_idea.description),
+                original_idea_id=original_idea.id
+            )
             
-            return JsonResponse({
+            response = JsonResponse({
                 "success": True,
-                "message": "Idea updated successfully",
+                "message": "New idea version created successfully",
                 "updated_data": {
-                    "idea_id": idea.id,
-                    "product_name": idea.product_name,
-                    "description": idea.description
+                    "idea_id": new_idea.id,
+                    "product_name": new_idea.product_name,
+                    "description": new_idea.description
                 }
             })
+            response["Access-Control-Allow-Origin"] = "http://localhost:5173"
+            response["Access-Control-Allow-Credentials"] = "true"
+            return response
             
         except Exception as e:
-            return JsonResponse({
+            response = JsonResponse({
                 "success": False,
                 "error": str(e)
             })
+            response["Access-Control-Allow-Origin"] = "http://localhost:5173"
+            response["Access-Control-Allow-Credentials"] = "true"
+            return response
+            
 
 @csrf_exempt
 @require_http_methods(["DELETE", "OPTIONS"])
@@ -246,123 +258,208 @@ def delete_idea(request):
 def decompose_product_description(product_description, model):
     """Break down product description into specific aspects using Gemini AI"""
     prompt = f"""
-    Act as an expert product designer and photographer. Break down this product description into specific aspects that need to be captured in the image.
-
+     You are an expert product designer and professional product photographer.
+     Carefully analyze the following product description and decompose it into distinct visual elements that must be captured in a single product photograph.
+ 
+ 
     Product Description:
     {product_description}
-
+ 
     Instructions:
-    1. Analyze the product description and identify distinct visual components
-    2. Create separate, specific descriptions for each component
-    3. Consider:
-       - Physical attributes (shape, size, colors)
+    1. Identify each visual component necessary for a comprehensive product shot.
+    2. For every component, provide a one line description focusing on:
+       - Physical attributes (shape, Dimensions, size, colors)
        - Materials and textures
        - Key features and functionality
        - Style and aesthetic elements
-       - Target market positioning
-    4. Include both technical and aesthetic aspects
-
+       - Target market positioning (if relevant)
+    3. Include both technical and aesthetic aspects
+ 
     Important: Format your response as a simple list with one aspect per line, starting each line with a hyphen (-).
     """
-    
+   
     try:
         response = model.generate_content(prompt)
         response_text = response.text.strip()
-        
+       
         aspects = [
-            line[1:].strip() 
-            for line in response_text.split('\n') 
+            line[1:].strip()
+            for line in response_text.split('\n')
             if line.strip().startswith('-')
         ]
-        
+       
         return aspects if aspects else []
-            
+           
     except Exception as e:
         print(f"Error decomposing product description: {str(e)}")
         return []
-    
+   
 def synthesize_product_aspects(product_description, aspects, model):
     """Synthesize product aspects into an enhanced description"""
     try:
         synthesis_prompt = f"""
-        Create a detailed product visualization description based on:
-
+        You are a seasoned product photographer and creative director. Using the following information, craft a single, cohesive product visualization description for an image.
+ 
         Original Product Description: {product_description}
-        
+       
         Detailed Aspects:
         {json.dumps(aspects, indent=2)}
-        
-        Provide a comprehensive description that:
-        1. Integrates all identified aspects
-        2. Emphasizes visual elements and composition
-        3. Maintains professional product photography standards
-        4. Includes lighting and background considerations
-        5. Specifies important details for image generation
-
-        Return only the final enhanced description suitable for image generation.
-        """
-        
+       
+        Requirements:
+        1. Seamlessly integrate all identified aspects into one holistic description.
+        2. Emphasize key visual details and composition (angles, focus points, etc.).
+        3. Adhere to professional product photography standards (lighting, background, clarity).
+        4. Note any crucial details (such as scale, brand elements, or unique design features).
+        5. Make the description concise yet detailed enough for image generation.
+ 
+ 
+        Deliverable:
+        - Return only the final enhanced description suitable for an image-generation prompt.
+        - Do not include any formatting other than plain text paragraphs.
+        - Avoid restating the bullet points verbatim; instead, synthesize them into a fluid, descriptive narrative."""
+       
         response = model.generate_content(synthesis_prompt)
         return response.text
     except Exception as e:
         print(f"Error in synthesis: {str(e)}")
         return product_description
-
+ 
 def enhance_prompt(product_description, model):
     """Enhanced version of prompt generation with aspect decomposition"""
     # First, decompose the product description
     aspects = decompose_product_description(product_description, model)
-    
+   
     # Synthesize aspects into detailed description
     if aspects:
         enhanced_description = synthesize_product_aspects(product_description, aspects, model)
     else:
         enhanced_description = product_description
-    
+   
     # Base prompt with stronger emphasis on composition and detail
-    base_prompt = f"""Ultra-detailed professional product photography of {enhanced_description}, 
-    centered composition with all elements clearly visible, pure white seamless background,
-    studio lighting setup with three-point lighting, photorealistic quality, perfectly clear and legible text elements,
-    commercial advertising style, product catalog photography, clear focus on every detail,
-    professional marketing photo with balanced composition"""
-    
+    base_prompt = f"""Ultra-detailed professional product photography of {enhanced_description}.
+    - centered composition with all elements clearly visible
+    - pure white seamless background
+    - studio lighting setup with three-point lighting for balanced illumination
+    - photorealistic high-resolution quality, razor sharp focus
+    - perfectly clear and legible text or branding elements (if applicable)
+    - commercial advertising style
+    - product catalog photography
+    - emphasis on key features and textures
+    - clean, polished, and visualy striking appearance
+    - professional marketing photo with balanced composition"""
+   
     # Parse for specific elements
     product_description_lower = product_description.lower()
-    
+   
     # Technology and gadgets
     if any(word in product_description_lower for word in ['tech', 'gadget', 'electronic', 'digital', 'smart', 'device']):
         base_prompt += """, modern tech aesthetic, blue-tinted studio lighting,
         clean minimalist style, glossy finish on surfaces, subtle reflections,
         power indicators and displays clearly visible, interface elements sharp and legible,
         precise edge definition"""
-    
+   
     # Natural and eco-friendly products
     if any(word in product_description_lower for word in ['eco', 'natural', 'organic', 'sustainable', 'bamboo', 'wood']):
         base_prompt += """, natural material textures clearly visible,
         warm lighting to highlight organic materials, matte finish,
         environmental styling, earth tones, texture detail preserved,
         sustainable packaging visible, natural color accuracy"""
-    
+   
     # Luxury items
     if any(word in product_description_lower for word in ['luxury', 'premium', 'high-end', 'elegant', 'exclusive']):
         base_prompt += """, luxury product photography style, dramatic lighting,
         premium finish with metallic accents, sophisticated composition,
         attention to material quality, subtle shadows, elegant presentation,
         premium brand aesthetic, high-end commercial look"""
-    
+   
     # Fashion and accessories
     if any(word in product_description_lower for word in ['fashion', 'clothing', 'wear', 'accessory', 'jewelry', 'watch']):
         base_prompt += """, fashion magazine style, fabric textures clearly visible,
         detailed stitching, material draping, accessories prominently displayed,
-        fashion lighting setup, premium fabric detail capture, 
+        fashion lighting setup, premium fabric detail capture,
         clear view of patterns and textures, product fit visualization"""
-    
+ 
+    # Food & Beverage
+    if any(word in product_description_lower for word in ['food', 'beverage', 'drink', 'edible', 'snack', 'meal']):
+        base_prompt += """, mouth-watering presentation, vibrant colors to highlight freshness,
+        clean plating or container styling, subtle steam or condensation for realism,
+        appetizing composition, clear visibility of texture and ingredients,
+        focus on tempting food photography style"""
+ 
+    # Cosmetics & Personal Care
+    if any(word in product_description_lower for word in ['cosmetic', 'skincare', 'beauty', 'makeup', 'personal care', 'cream', 'lotion']):
+        base_prompt += """, glossy or matte finish to highlight product texture,
+        soft lighting to capture subtle details, chic aesthetic, emphasis on packaging design,
+        crisp labeling and brand logos, premium beauty photography style,
+        clean and minimalist arrangement"""
+ 
+    # Furniture & Home Décor
+    if any(word in product_description_lower for word in ['furniture', 'sofa', 'table', 'chair', 'decor', 'home decor', 'interior']):
+        base_prompt += """, emphasis on form and function, highlight material texture,
+        realistic room setting or context if needed, warm and inviting lighting,
+        balanced composition focusing on design lines, high-res detail capture,
+        décor styling that complements the piece"""
+ 
+    # Sports & Fitness Gear
+    if any(word in product_description_lower for word in ['fitness', 'sports', 'gym', 'workout', 'exercise', 'athletic', 'equipment']):
+        base_prompt += """, dynamic lighting to emphasize performance aspect,
+        athletic or energetic vibe, highlight durable materials and ergonomic design,
+        bright, high-contrast style, clear brand logos and performance features,
+        sturdy construction visible"""
+ 
+    # Kids & Toys
+    if any(word in product_description_lower for word in ['kids', 'toy', 'children', 'child', 'toddler', 'baby', 'play']):
+        base_prompt += """, playful and colorful composition, bright and cheerful lighting,
+        emphasize safety features and soft edges, focus on fun and imaginative elements,
+        child-friendly design details, attention to whimsical or cartoon styling"""
+ 
+    # Automotive Products
+    if any(word in product_description_lower for word in ['automotive', 'car accessory', 'vehicle', 'car care', 'motorcycle']):
+        base_prompt += """, sleek automotive aesthetic, metallic finishes where applicable,
+        emphasis on durability and craftsmanship, detail in mechanical design,
+        brand or model references if relevant, rugged environment or track setting if needed,
+        polished reflections for a premium look"""
+ 
+    # Tools & Hardware
+    if any(word in product_description_lower for word in ['tool', 'hardware', 'utility', 'drill', 'hammer', 'screwdriver']):
+        base_prompt += """, focus on robust construction, industrial lighting style,
+        highlight steel or metal textures, close-up detail of functional parts,
+        brand or model labeling visible, functional stance, minimal background clutter"""
+ 
+    # Healthcare & Medical Devices
+    if any(word in product_description_lower for word in ['medical', 'healthcare', 'hospital', 'patient', 'monitor', 'diagnostic']):
+        base_prompt += """, clean and clinical look, sterile white or light blue background,
+        emphasis on safety and precision, clearly visible user interface or display,
+        brand or classification labeling, highlight ergonomic design,
+        precise and organized composition"""
+ 
+    # E-Commerce
+    if any(word in product_description_lower for word in ['e-commerce', 'ecommerce', 'marketplace', 'online store', 'digital cart', 'web shop', 'online platform'    ]):        
+        base_prompt += """, packaging design with clear branding, device screens or interface elements visible if relevant,
+        minimalist background with emphasis on the product or brand,
+        cohesive color scheme that aligns with online retail aesthetics,
+        modern commercial style photography, promotional-style lighting"""
+ 
+    # BFSI (Banking, Financial Services, Insurance)
+    if any(word in product_description_lower for word in ['finance', 'bank', 'insurance', 'loan', 'credit', 'debit', 'investment', 'fintech', 'financial', 'accounting', 'tax', 'mortgage' ]):
+        base_prompt += """, emphasis on trustworthiness and credibility,
+        sleek corporate color palette, subtle brand identity elements,
+        minimalistic yet professional lighting, well-defined details symbolizing security and reliability,
+        neat composition illustrating professional standards"""
+ 
+    # B2B Services (Enterprise / Corporate / Consulting)
+    if any(word in product_description_lower for word in ['enterprise', 'company', 'organization','b2b', 'corporate solutions', 'business services', 'professional services', 'consulting', 'industrial']):
+        base_prompt += """, polished corporate look, professional environment cues,
+        well-defined brand imagery or placeholders, subtle references to collaboration,
+        modern and sophisticated lighting, neutral color palette,
+        focus on clarity and straightforward presentation, intangible services represented by abstract or symbolic visuals"""
+ 
     # Add emphasis on maintaining all elements
     base_prompt += """, ensuring all mentioned elements remain in final composition,
     no elements missing or obscured, complete product representation,
     all features mentioned in description visible and clear"""
-    
-    return base_prompt  
+ 
+    return base_prompt
 
 def generate_image_with_retry(client, prompt, size=768, steps=30, guidance_scale=7.5, max_retries=3, initial_delay=1):
     """Generate image with retry mechanism"""
@@ -461,7 +558,19 @@ def generate_product_image(request):
             img_buffer = io.BytesIO()
             image.save(img_buffer, format="PNG")
             img_str = base64.b64encode(img_buffer.getvalue()).decode()
-            
+
+            # Ensure generated_images directory exists
+            # Ensure generated_images directory exists
+            os.makedirs(os.path.join(settings.MEDIA_ROOT, 'generated_images'), exist_ok=True)
+        
+            # Create a unique filename
+            filename = f"product_image_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png"
+            full_path = os.path.join(settings.MEDIA_ROOT, 'generated_images', filename)
+
+            # Save image to file system
+            with open(full_path, 'wb') as f:
+                f.write(img_buffer.getvalue())
+
             # Save image to database with parameters
             generated_image = GeneratedImage2.objects.create(
                 idea=idea,
@@ -476,11 +585,20 @@ def generate_product_image(request):
                     'guidance_scale': guidance_scale
                 })
             )
+
+            # Open the saved file and attach it to the model
+            with open(full_path, 'rb') as f:
+                generated_image.image.save(filename, ContentFile(f.read()))
+        
+            # Convert to base64 for response
+            with open(full_path, 'rb') as f:
+                img_str = base64.b64encode(f.read()).decode()
             
             return JsonResponse({
                 "success": True,
                 "image": img_str,
                 "idea_id": idea_id,
+                "generated_image_id": generated_image.id,
                 "parameters": {
                     'size': size,
                     'steps': steps,
@@ -597,3 +715,162 @@ def regenerate_product_image(request):
                 "success": False,
                 "error": str(e)
             })
+        
+
+# views.py
+def get_idea_history(request, idea_id):
+    try:
+        current_idea = get_object_or_404(Idea, id=idea_id)
+        
+        # Find the root idea and all its versions
+        if current_idea.original_idea_id:
+            # If this is a version, get the root idea
+            root_idea_id = current_idea.original_idea_id
+        else:
+            # This is the root idea
+            root_idea_id = current_idea.id
+            
+        # Get all versions related to this root idea including the root itself
+        idea_versions = Idea.objects.filter(
+            Q(id=root_idea_id) |  
+            Q(original_idea_id=root_idea_id)
+        ).order_by('created_at')
+        
+        # Determine if there are actual edits
+        has_edits = idea_versions.count() > 1
+        
+        # Process idea versions
+        version_data = []
+        for version in idea_versions:
+            version_data.append({
+                'id': version.id,
+                'product_name': version.product_name,
+                'description': version.description,
+                'created_at': version.created_at.isoformat(),
+                'is_current': version.id == current_idea.id,
+                'show_restore': version.id != current_idea.id  # Only show restore for non-current versions
+            })
+            
+        # Get only images related to these specific versions
+        image_versions = GeneratedImage2.objects.filter(
+            idea_id__in=[v['id'] for v in version_data]
+        ).order_by('-created_at')
+        
+        # Determine if there are multiple image generations
+        has_multiple_images = image_versions.count() > 1
+        
+        image_data = []
+        for img in image_versions:
+            try:
+                if img.image and os.path.exists(img.image.path):
+                    with open(img.image.path, 'rb') as image_file:
+                        image_base64 = base64.b64encode(image_file.read()).decode('utf-8')
+                    
+                    image_data.append({
+                        'id': img.id,
+                        'image_url': image_base64,
+                        'created_at': img.created_at.isoformat(),
+                        'parameters': img.parameters,
+                        'idea_id': img.idea_id,
+                        'is_regenerated': json.loads(img.parameters).get('is_regenerated', False) if img.parameters else False
+                    })
+            except Exception as file_error:
+                print(f"Error processing image {img.id}: {file_error}")
+        
+        return JsonResponse({
+            'success': True,
+            'history': {
+                'idea_versions': version_data,
+                'image_versions': image_data,
+                'has_idea_edits': has_edits,
+                'has_multiple_images': has_multiple_images
+            }
+        })
+    
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=400)
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def restore_idea_version(request):
+    try:
+        data = json.loads(request.body)
+        version_id = data.get('version_id')
+        current_id = data.get('current_id')
+        image_id = data.get('image_id')
+        
+        # Get the version to restore and its associated image
+        version_idea = get_object_or_404(Idea, id=version_id)
+        current_idea = get_object_or_404(Idea, id=current_id)
+        
+        # Create a new version with restored data
+        restored_idea = Idea.objects.create(
+            product_idea=current_idea.product_idea,
+            product_name=version_idea.product_name,
+            description=version_idea.description,
+            original_idea_id=current_idea.id
+        )
+        
+        # Retrieve all images associated with the original version
+        original_images = GeneratedImage2.objects.filter(idea_id=version_id)
+        
+        # Copy all images from the original version
+        restored_images = []
+        restored_image_base64 = None
+        for original_image in original_images:
+            # Create a new image instance for each original image
+            restored_image = GeneratedImage2.objects.create(
+                idea=restored_idea,
+                prompt=original_image.prompt,
+                parameters=original_image.parameters,
+                created_at=original_image.created_at  # Preserve original creation timestamp
+            )
+            
+            # Copy the image file
+            if original_image.image:
+                restored_image.image.save(
+                    original_image.image.name,
+                    ContentFile(original_image.image.read())
+                )
+            
+            restored_images.append(restored_image)
+            
+            # If this is the specified image or the first image, convert to base64
+            if (image_id and original_image.id == image_id) or (not image_id and not restored_image_base64):
+                with open(restored_image.image.path, 'rb') as img_file:
+                    restored_image_base64 = base64.b64encode(img_file.read()).decode('utf-8')
+        
+        # Prepare image versions for response
+        image_versions = []
+        for img in restored_images:
+            with open(img.image.path, 'rb') as img_file:
+                image_base64 = base64.b64encode(img_file.read()).decode('utf-8')
+                image_versions.append({
+                    'id': img.id,
+                    'image_url': image_base64,
+                    'created_at': img.created_at.isoformat(),
+                    'parameters': img.parameters
+                })
+        
+        return JsonResponse({
+            'success': True,
+            'idea': {
+                'id': restored_idea.id,
+                'idea_id': restored_idea.id,
+                'product_name': restored_idea.product_name,
+                'description': restored_idea.description,
+                'image_url': restored_image_base64,
+                'images': image_versions  # Include all image versions
+            }
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        })
+    
+

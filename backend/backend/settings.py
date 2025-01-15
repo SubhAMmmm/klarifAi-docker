@@ -50,8 +50,8 @@ INSTALLED_APPS = [
     'chat',
     'ideaGen',
     'structruedDataQuery',
+    'topicModelling',
 ]
-
 
 
 REST_FRAMEWORK = {
@@ -128,8 +128,8 @@ DATABASES = {
 # Database routers configuration
 DATABASE_ROUTERS = ['backend.routers.DatabaseRouter']
 
-# The database URL for structuredDataQuery
-DATABASE_URL = f"postgresql://{os.getenv('DB_USER', 'postgres')}:{os.getenv('DB_PASSWORD', 'root')}@{os.getenv('DB_HOST', 'localhost')}:{os.getenv('DB_PORT', '5432')}/data_analysis"
+# # The database URL for structuredDataQuery
+# DATABASE_URL = f"postgresql://{os.getenv('DB_USER', 'postgres')}:{os.getenv('DB_PASSWORD', 'root')}@{os.getenv('DB_HOST', 'localhost')}:{os.getenv('DB_PORT', '5432')}/data_analysis"
 
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOWED_ORIGINS = [
@@ -207,6 +207,8 @@ STATIC_URL = 'static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+os.makedirs(os.path.join(MEDIA_ROOT, 'generated_images'), exist_ok=True)
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field

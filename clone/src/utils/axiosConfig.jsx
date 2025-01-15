@@ -24,6 +24,29 @@ axiosInstance.interceptors.request.use(
 );
 
 
+export const topicModelingService = {
+  uploadDataset: (formData) => {
+    return axiosInstance.post('/analysis/upload_dataset/', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+  },
+
+  enhancedCustomAnalysis: (data) => {
+    return axiosInstance.post('/analysis/enhanced_handle_custom_analysis/', data);
+  },
+
+  analyzeSentiment: (data) => {
+    return axiosInstance.post('/analysis/analyze_sentiment/', data);
+  },
+
+  semanticSearch: (data) => {
+    return axiosInstance.post('/analysis/semantic_search/', data);
+  }
+};
+
+
 export const dataAnalysisService = {
   uploadFile: (formData) => {
     return axiosInstance.post('/data/analysis/', formData, {
@@ -71,6 +94,25 @@ export const ideaService = {
 
   regenerateProductImage: (data) => {
     return axiosInstance.post('/ideas/regenerate_product_image/', data);
+  },
+
+  getIdeaHistory: async (ideaId) => {
+    try {
+        const response = await axiosInstance.get(`/ideas/idea-history/${ideaId}/`);
+        return response;
+    } catch (error) {
+        console.error("Error fetching idea history:", error);
+        throw error;
+    }
+},
+  
+  restoreIdeaVersion: async (data) => {
+    // Use axiosInstance instead of axios for consistency
+    return await axiosInstance.post('/ideas/restore-idea-version/', {
+      version_id: data.version_id,
+      current_id: data.current_id,
+      image_id: data.image_id
+    });
   }
 };
 
