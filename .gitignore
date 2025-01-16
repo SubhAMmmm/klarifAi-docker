@@ -1,0 +1,12 @@
+# Virtual Environment
+venv/
+*.dll
+*.lib
+
+# Node
+node_modules/
+
+# Media and Data files
+*.png
+*.pdf
+*.csv
