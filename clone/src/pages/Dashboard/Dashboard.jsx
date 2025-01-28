@@ -1,4 +1,4 @@
-//Dashboard.jsx
+//Dashboard.jsx original
 /* eslint-disable no-unused-vars */
 import React, { useState, useEffect, useCallback } from 'react';
 import PropTypes from 'prop-types';
@@ -9,18 +9,20 @@ import MainContent from '../../components/dashboard/MainContent';
 import backgroundImage from '../../assets/bg-main.jpg';
 
 const Dashboard = () => {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  // Change default sidebar state to closed
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [selectedChat, setSelectedChat] = useState(null);
   const [selectedDocument, setSelectedDocument] = useState(null);
   const [summary, setSummary] = useState('');
   const [followUpQuestions, setFollowUpQuestions] = useState([]);
   const [isSummaryPopupOpen, setIsSummaryPopupOpen] = useState(false);
-  const [selectedDocuments, setSelectedDocuments] = useState([]); // Add this line
+  const [selectedDocuments, setSelectedDocuments] = useState([]);
+
   // Stable callback for setting follow-up questions
   const stableSetFollowUpQuestions = useCallback((questions) => {
     setFollowUpQuestions(questions);
-  }, []); // Empty dependency array ensures stability
+  }, []); 
 
   // Stable callback for setting summary
   const stableSsetSummary = useCallback((summaryText) => {
@@ -37,8 +39,8 @@ const Dashboard = () => {
     const checkMobile = () => {
       const mobile = window.innerWidth <= 768;
       setIsMobile(mobile);
-      // Auto-close sidebar on mobile
-      setIsSidebarOpen(!mobile);
+      // On mobile, keep sidebar closed
+      setIsSidebarOpen(false);
     };
 
     // Check initial screen size
@@ -74,15 +76,11 @@ const Dashboard = () => {
     setSummary('');
     setFollowUpQuestions([]);
     setSelectedDocuments([]);
-    
-    // Optionally, you can add more reset logic here
   };
-  // Add a method to handle sending messages
-   const handleSendMessage = async (message, documents) => {
-    // Placeholder for message sending logic
+
+  const handleSendMessage = async (message, documents) => {
     console.log('Sending message:', message);
     console.log('With documents:', documents);
-    // Implement your actual message sending logic here
   };
 
   const toggleSidebar = () => {
@@ -91,19 +89,20 @@ const Dashboard = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-black overflow-hidden">
-      <div className="fixed inset-0 w-full h-full bg-cover bg-center bg-no-repeat z-0"
-                      style={{
-                          backgroundImage: `url(${backgroundImage})`,
-                          backgroundSize: 'cover',
-                          backgroundPosition: 'center',
-                      }}
-                      role="img"
-                      aria-label="Background"
-                  />
-                  <div className="absolute inset-0 bg-black/50 backdrop-blur-[2px]"></div>
+      <div 
+        className="fixed inset-0 w-full h-full bg-cover bg-center bg-no-repeat z-0"
+        style={{
+          backgroundImage: `url(${backgroundImage})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+        role="img"
+        aria-label="Background"
+      />
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-[2px]"></div>
       <Header />
       
-      <div className="flex flex-1 relative ">
+      <div className="flex flex-1 relative">
         {/* Mobile Overlay for Sidebar */}
         {isMobile && isSidebarOpen && (
           <div 
@@ -139,7 +138,7 @@ const Dashboard = () => {
         </button>
 
         {/* Responsive Layout Container */}
-        <div className="flex flex-1 overflow-hidden w-full ">
+        <div className="flex flex-1 overflow-hidden w-full">
           <Sidebar
             isOpen={isSidebarOpen}
             isMobile={isMobile}
@@ -165,7 +164,7 @@ const Dashboard = () => {
               duration-300 
               ease-in-out 
               ${!isMobile && isSidebarOpen 
-                ? 'pl-0 max-w-[calc(100%-330px)]' 
+                ? 'px-0 max-w-[calc(100%-330px)]' 
                 : 'pl-0 max-w-full'
               }
             `}
@@ -173,12 +172,14 @@ const Dashboard = () => {
             <div 
               className={`
                 w-full 
-                max-w-4xl 
+                max-w-full 
                 transition-all 
                 duration-300 
                 ease-in-out 
+                pl-16
+                mx-16
                 ${!isMobile && isSidebarOpen 
-                  ? 'ml-0 w-[90%]' 
+                  ? 'ml-0 w-[100%]' 
                   : 'ml-0 w-full'
                 }
               `}

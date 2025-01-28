@@ -286,3 +286,4 @@ const VersionHistory = ({ idea, onRestoreVersion, onClose, onSelectImage }) => {
 };
 
 export default VersionHistory;
+

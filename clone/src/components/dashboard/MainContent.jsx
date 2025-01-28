@@ -1,3 +1,6 @@
+
+
+
 // 11-12-24
 // MainContent.jsx
 /* eslint-disable no-unused-vars */
@@ -17,8 +20,6 @@ import {
 import PropTypes from "prop-types";
 import { documentService, chatService } from "../../utils/axiosConfig";
 import { toast } from "react-toastify";
-import Popup from "../Popup";
-import Citation from "../dashboard/Citations";
 import Card from "../Card";
 import { Tooltip } from "react-tooltip";
 import EditableMessage from "./EditableMessage";
@@ -179,6 +180,7 @@ const MainContent = ({
       if (localSelectedDocuments.length <= 1) return null;
 
       return (
+        
         <select
           value={localSelectedDocuments[0]}
           onChange={(e) => {
@@ -260,10 +262,43 @@ const MainContent = ({
 
     return (
       <div className="absolute inset-0 pt-16 backdrop-blur-xl flex flex-col overflow-hidden transition-all duration-300 ease-in-out ">
+         {/* View Toggle at the top */}
+      <div className="fixed left-0 right-0 flex justify-center z-50 top-4">
+        <div className="flex items-center space-x-2 bg-gray-800/50 rounded-full p-1 backdrop-blur-md shadow-lg">
+          <button
+            onClick={() => toggleView("chat")}
+            className={`
+              px-3 py-1.5 rounded-full text-xs transition-all duration-300
+              ${
+                currentView === "chat"
+                  ? "bg-gradient-to-r from-blue-600/70 to-green-500/70 text-white"
+                  : "text-gray-300 hover:bg-gray-700/50"
+              }
+            `}
+          >
+            <MessageCircle className="inline-block mr-1.5 h-3 w-3" />
+            Chat
+          </button>
+          <button
+            onClick={() => toggleView("summary")}
+            className={`
+              px-3 py-1.5 rounded-full text-xs transition-all duration-300
+              ${
+                currentView === "summary"
+                  ? "bg-gradient-to-r from-blue-600/70 to-green-500/70 text-white"
+                  : "text-gray-300 hover:bg-gray-700/50"
+              }
+            `}
+          >
+            <FileText className="inline-block mr-1.5 h-3 w-3" />
+            Summary
+          </button>
+        </div>
+      </div>
         <div className="flex-1 overflow-hidden">
           <div className="h-full w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-  <div
-    className="
+            <div
+              className="
       h-full 
       flex 
       flex-col 
@@ -282,7 +317,7 @@ const MainContent = ({
       transition-all
       duration-300
     "
-  >
+            >
               {/* Header with Document Selector */}
               <div
                 className="px-4 sm:px-6 py-3 sm:py-2
@@ -399,7 +434,11 @@ const MainContent = ({
   }, [selectedChat, setSummary, setSelectedDocuments, setFollowUpQuestions]);
 
   useEffect(() => {
-    scrollToBottom();
+    // Only scroll if the last message is a user message
+    const lastMessage = conversation[conversation.length - 1];
+    if (lastMessage && lastMessage.role === "user") {
+      scrollToBottom();
+    }
   }, [conversation]);
 
   useEffect(() => {
@@ -773,97 +812,42 @@ const MainContent = ({
   };
   const renderMessage = (msg) => {
     if (msg.role === "assistant") {
-      const processCitationReferences = (content, citations) => {
-        if (!citations || citations.length === 0) return content;
-
-        let processedContent = content;
-
-        // More robust regex to find citations, including variations
-        const citationRegex = /\[(\d+)\]/g;
-        const citationOccurrences = new Map();
-
-        processedContent = processedContent.replace(
-          citationRegex,
-          (match, citationIndex) => {
-            const index = parseInt(citationIndex) - 1;
-
-            // Ensure valid citation index
-            if (index >= 0 && index < citations.length) {
-              // Track the number of times this specific citation has been used
-              const occurrenceCount = (citationOccurrences.get(index) || 0) + 1;
-              citationOccurrences.set(index, occurrenceCount);
-
-              const citation = citations[index] || {};
-
-              // Escape any special characters in the snippet to prevent XSS
-              const safeSnippet = citation.snippet
-                ? citation.snippet.replace(/"/g, "&quot;")
-                : "No snippet available";
-
-              return `
-              <span 
-                class="citation-inline-wrapper group inline-block" 
-                data-tooltip-id="citation-tooltip-${index}"
-                data-tooltip-content="${safeSnippet}"
-              >
-                <sup class="
-                  text-xs 
-                  text-blue-400 
-                  cursor-help 
-                  hover:underline 
-                  ml-0.5 
-                  transition-colors
-                  group-hover:text-blue-300
-                ">[${citationIndex}]</sup>
-              </span>
-            `;
-            }
-
-            // Return original match if citation can't be processed
-            return match;
-          }
-        );
-
-        return processedContent;
-      };
-
-      const processedContent = processCitationReferences(
-        msg.content,
-        msg.citations
-      );
+      const formattedContent = `
+      <div class="space-y-2">
+        <p class="text-gray-200">${msg.content}</p>
+        
+        ${
+          msg.additional_insights
+            ? `
+          <div class="mt-2">
+            <h4 class="text-sm font-semibold text-blue-300 mb-1">Additional Insights</h4>
+            <p class="text-gray-300 text-xs italic">${msg.additional_insights}</p>
+          </div>
+        `
+            : ""
+        }
+        
+        ${
+          msg.key_points && msg.key_points.length > 0
+            ? `
+          <div class="mt-2">
+            <h4 class="text-sm font-semibold text-blue-300 mb-1">Key Points</h4>
+            <ul class="list-disc list-inside text-gray-300 text-xs space-y-1">
+              ${msg.key_points.map((point) => `<li>${point}</li>`).join("")}
+            </ul>
+          </div>
+        `
+            : ""
+        }
+      </div>
+    `;
 
       return (
         <div className="flex flex-col space-y-2">
           <div
             className="text-sm relative citation-container"
-            dangerouslySetInnerHTML={{ __html: processedContent }}
+            dangerouslySetInnerHTML={{ __html: formattedContent }}
           />
-
-          {/* Render tooltips */}
-          {msg.citations &&
-            msg.citations.map((citation, index) => (
-              <Tooltip
-                key={index}
-                id={`citation-tooltip-${index}`}
-                place="top"
-                className="custom-tooltip"
-              >
-                <div className="font-bold mb-1">Source Details</div>
-                <div className="space-y-1">
-                  <p>
-                    <strong>Document:</strong>{" "}
-                    {citation.source_file || "Unknown"}
-                  </p>
-                  <p>
-                    <strong>Page:</strong> {citation.page_number || "N/A"}
-                  </p>
-                  <div className="mt-1 text-gray-300 italic">
-                    {citation.snippet || "No snippet available"}
-                  </div>
-                </div>
-              </Tooltip>
-            ))}
-
           {msg.citations && msg.citations.length > 0 && (
             <div className="mt-2 text-sm text-gray-300 relative">
               <button
@@ -1170,54 +1154,10 @@ const MainContent = ({
         transition-all 
         duration-300 
         ease-in-out
+        
         "
     >
-      {/* Header with View Toggle */}
-      <div
-        className="absolute top-16 left-0 right-0 z-40 
-        bg-opacity-100
-        backdrop-blur-xl
-        border-b
-        border-blue-500/10 
-        py-2
-        px-4 
-        flex 
-        justify-between
-        items-center"
-      >
-        <div className="flex-1"></div> {/* Spacer */}
-        <div className="flex items-center space-x-2 bg-gray-800/30 rounded-full p-1">
-          <button
-            onClick={() => toggleView("chat")}
-            className={`
-                  px-4 py-2 rounded-full text-sm transition-all duration-300
-                  ${
-                    currentView === "chat"
-                      ? "bg-gradient-to-r from-[#2c3e95]/90 to-[#3fa88e]/80 text-white"
-                      : "text-gray-300 hover:bg-gray-700"
-                  }
-              `}
-          >
-            <MessageCircle className="inline-block mr-2 h-4 w-4" />
-            Chat
-          </button>
-          <button
-            onClick={() => toggleView("summary")}
-            className={`
-                  px-4 py-2 rounded-full text-sm transition-all duration-300
-                  ${
-                    currentView === "summary"
-                      ? "bg-gradient-to-r from-[#2c3e95]/90 to-[#3fa88e]/80 text-white"
-                      : "text-gray-300 hover:bg-gray-700"
-                  }
-              `}
-          >
-            <FileText className="inline-block mr-2 h-4 w-4" />
-            Summary
-          </button>
-        </div>
-        <div className="flex-1"></div> {/* Spacer */}
-      </div>
+   
 
       {/* Conditional Rendering based on current view */}
       <div className="absolute inset-0 top-16 overflow-hidden">
@@ -1227,6 +1167,7 @@ const MainContent = ({
             top-16
             rounded-t-3xl 
             overflow-hidden 
+            
           "
           >
             {/* Chat Messages */}
@@ -1260,7 +1201,7 @@ const MainContent = ({
       ${
         msg.role === "user"
           ? "bg-gradient-to-r from-blue-600/30 to-emerald-600/30 text-white max-w-[70%] border-emerald-500/20"
-          : "bg-gradient-to-r from-gray-800/70 to-gray-900/70 text-white max-w-full border-blue-500/20"
+          : "bg-gray-900 text-white max-w-full border-blue-500/20"
       }
       transition-all 
       duration-300 
@@ -1275,7 +1216,7 @@ const MainContent = ({
                           <Bot className="mr-2 h-5 w-5" />
                         )}
                         <span className="font-bold">
-                          {msg.role === "user" ? "You" : "Assistant"}
+                          {msg.role === "user" ? "You" : "Klarifai"}
                         </span>
                       </div>
                       {msg.role === "user" ? (
@@ -1321,9 +1262,9 @@ const MainContent = ({
             </div>
 
             {/* Follow-up Questions and Input Area */}
-            <div className="w-full px-2 py-2 fixed-bottom-0 z-20 pointer-events-none">
+            <div className="w-full fixed-bottom-0 z-20 pointer-events-none">
               <div
-                className="w-full px-2 py-4 bottom-20
+                className="w-full px-2 pb-4 bottom-20
                   transition-all duration-300 ease-in-out
                   transform ${isFollowUpQuestionsMinimized ? 'translate-y-full' : 'translate-y-0'}
                   z-20
@@ -1331,7 +1272,7 @@ const MainContent = ({
                 "
               >
                 <div
-  className="
+                  className="
     bg-gradient-to-b 
     from-gray-900/80 
     via-gray-800/80 
@@ -1345,9 +1286,8 @@ const MainContent = ({
     border-t 
     border-blue-500/20
   "
->
-
-                  <div className="flex justify-center mb-1 py-1">
+                >
+                  <div className="flex justify-center mb-1">
                     <button
                       onClick={toggleFollowUpQuestions}
                       className="text-white p-1 transition-colors"
@@ -1362,14 +1302,17 @@ const MainContent = ({
                   {!isFollowUpQuestionsMinimized &&
                     currentFollowUpQuestions.length > 0 && (
                       <div className="w-full px-4 py-1">
-                        <div className="flex gap-2 overflow-x-auto py-2">
+                        <div className="flex gap-2 overflow-x-auto">
                           {currentFollowUpQuestions.map((question, index) => (
                             <Card
                               key={index}
-                              title={`Question ${index + 1}`}
                               onClick={() => {
-                                setMessage(question);
-                                handleSendMessage();
+                                // Remove numbering like "1. ", "2. ", etc. at the start of the question
+                                const cleanedQuestion = question
+                                  .replace(/^(\d+\.\s*)/, "")
+                                  .trim();
+                                setMessage(cleanedQuestion);
+                                handleSendMessage(cleanedQuestion);
                               }}
                             >
                               {question}
@@ -1382,7 +1325,7 @@ const MainContent = ({
                 {/* Input Area */}
 
                 <div
-  className="
+                  className="
     bg-gradient-to-b 
     from-gray-900/90 
     to-gray-800/90
@@ -1396,7 +1339,7 @@ const MainContent = ({
     border-t 
     border-blue-500/10
   "
->
+                >
                   <div className="flex items-center gap-2 max-w-full">
                     <div className="flex-1 relative">
                       <input
@@ -1446,7 +1389,45 @@ const MainContent = ({
                       >
                         <Paperclip className="h-5 w-5 sm:h-5 sm:w-5" />
                       </button>
-                    </div>
+                      
+                      </div>
+    {/* New view toggle button */}
+    <div className="flex items-center space-x-2 bg-gray-800/50 rounded-2xl p-1 backdrop-blur-md shadow-lg mr-2">
+    <button
+      onClick={() => toggleView("chat")}
+      className={`
+        flex items-center justify-center
+        p-2 sm:p-3
+        rounded-2xl 
+        transition-all 
+        duration-300
+        ${
+          currentView === "chat"
+            ? "bg-gradient-to-r from-blue-600/70 to-green-500/70 text-white"
+            : "text-gray-300 hover:bg-gray-700/50"
+        }
+      `}
+    >
+      <MessageCircle className="h-5 w-5 sm:h-5 sm:w-5" />
+    </button>
+    <button
+      onClick={() => toggleView("summary")}
+      className={`
+        flex items-center justify-center
+        p-2 sm:p-3
+        rounded-2xl 
+        transition-all 
+        duration-300
+        ${
+          currentView === "summary"
+            ? "bg-gradient-to-r from-blue-600/70 to-green-500/70 text-white"
+            : "text-gray-300 hover:bg-gray-700/50"
+        }
+      `}
+    >
+      <FileText className="h-5 w-5 sm:h-5 sm:w-5" />
+    </button>
+  </div>
                     <button
                       onClick={() => handleSendMessage(message)}
                       disabled={isLoading}
@@ -1474,26 +1455,6 @@ const MainContent = ({
       {isDocumentProcessing && (
         <DocumentProcessingLoader progress={processingProgress} />
       )}
-      {/* Summary Popup
-        {isSummaryPopupOpen && (
-            <Popup
-                title="Document Summary"
-                content={propSummary}
-                onClose={() => {
-                    setIsSummaryPopupOpen(false);
-                    onCloseSummary();
-                }} 
-                className="
-                    w-[95%] 
-                    max-w-[600px] 
-                    mx-auto 
-                    my-4 
-                    sm:my-10 
-                    text-sm 
-                    sm:text-base
-                "
-            />
-        )} */}
 
       {/* Custom Scrollbar Styles */}
       <style>{`

@@ -7,22 +7,24 @@ import Header from './dashboard/Header';
 import backgroundImage from '../assets/bg-main.jpg';
 
 const Alert = ({ title, description, onConfirm, onCancel }) => (
-  <div className="fixed bottom-4 right-4 w-96 bg-gray-800 border border-red-500/50 rounded-lg shadow-xl text-white p-4 animate-in slide-in-from-right-4">
-    <h4 className="text-lg font-semibold mb-2">{title}</h4>
-    <p className="text-gray-300 mb-4">{description}</p>
-    <div className="flex justify-end gap-3">
-      <button
-        onClick={onCancel}
-        className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors"
-      >
-        Cancel
-      </button>
-      <button
-        onClick={onConfirm}
-        className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-      >
-        Delete
-      </button>
+  <div className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+    <div className="w-96 bg-gray-800 border border-red-500/50 rounded-lg shadow-2xl text-white p-6 animate-in zoom-in-95">
+      <h4 className="text-xl font-bold mb-3 text-red-400">{title}</h4>
+      <p className="text-gray-300 mb-6">{description}</p>
+      <div className="flex justify-end gap-3">
+        <button
+          onClick={onCancel}
+          className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500"
+        >
+          Cancel
+        </button>
+        <button
+          onClick={onConfirm}
+          className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500"
+        >
+          Delete
+        </button>
+      </div>
     </div>
   </div>
 );
@@ -46,18 +48,18 @@ const ProjectNameModal = ({ onSubmit, onCancel }) => {
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 animate-in fade-in duration-200">
       <div className="bg-gray-800/95 rounded-xl p-8 w-full max-w-md mx-4 shadow-2xl border border-gray-700 animate-in slide-in-from-bottom-4">
         <h3 className="text-2xl font-bold text-white mb-6 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-emerald-400">
-          Create New Project
+          Create New Idea Project
         </h3>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-2">
-              Project Name
+              Idea Project Name
             </label>
             <input
               type="text"
               value={projectName}
               onChange={(e) => setProjectName(e.target.value)}
-              placeholder="Enter project name"
+              placeholder="Enter Idea project name"
               className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
               autoFocus
             />
@@ -78,7 +80,7 @@ const ProjectNameModal = ({ onSubmit, onCancel }) => {
               disabled={!projectName.trim()}
               className="px-6 py-2 bg-gradient-to-r from-blue-500 to-emerald-500 text-white rounded-lg hover:from-blue-600 hover:to-emerald-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:ring-2 focus:ring-blue-400 focus:outline-none shadow-lg"
             >
-              Create Project
+              Create Idea Project
             </button>
           </div>
         </form>
@@ -219,14 +221,14 @@ const ProjectList = ({ onSelectProject, onNewProject }) => {
       <div className="max-w-4xl mx-auto p-8 space-y-8">
         <div className="flex justify-between items-center">
           <h2 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400">
-            Your Projects
+            My Idea Projects
           </h2>
           <button 
             onClick={() => setShowNameModal(true)}
             className="px-6 py-3 bg-gradient-to-r from-blue-500 to-emerald-500 text-white rounded-lg hover:from-blue-600 hover:to-emerald-600 transition-all duration-200 flex items-center gap-2 shadow-lg hover:shadow-xl hover:scale-105"
           >
             <Plus size={20} />
-            New Project
+            New Idea Project
           </button>
         </div>
 

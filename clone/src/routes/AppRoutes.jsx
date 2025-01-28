@@ -16,6 +16,7 @@ import ProjectsIdeaGen from '../components/ProjectsIdeaGen';
 import TopicModeling from '../components/TopicModeling';
 
 
+
 const AppRoutes = () => {
   return (
     <BrowserRouter>
@@ -27,6 +28,7 @@ const AppRoutes = () => {
         <Route path="/idea-generation" element={<ProjectsIdeaGen/>} />
         <Route path="/structured-data-query" element={<StructruredDataQuery />} />
         <Route path="/topic-modeling" element={<TopicModeling/>} />
+      
 
         <Route path="/dashboard" element={
           <PrivateRoute>

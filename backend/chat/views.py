@@ -1,6 +1,9 @@
-#views.py
+
+
+#views.py original
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login
+from django.contrib.auth.hashers import check_password
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -36,7 +39,7 @@ import uuid
 from rest_framework.authtoken.models import Token
 from django.utils.safestring import mark_safe
 import logging
-
+from .models import UserProfile
 logger = logging.getLogger(__name__)
 
 
@@ -134,23 +137,118 @@ class LoginView(APIView):
         }, status=status.HTTP_401_UNAUTHORIZED)
 
 
+class ChangePasswordView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+        current_password = request.data.get('current_password')
+        new_password = request.data.get('new_password')
+
+        # Validate input
+        if not current_password or not new_password:
+            return Response({
+                'message': 'Both current and new password are required'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # Check if current password is correct
+        if not check_password(current_password, user.password):
+            return Response({
+                'message': 'Current password is incorrect'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # Set new password
+        user.set_password(new_password)
+        user.save()
+
+        return Response({
+            'message': 'Password updated successfully'
+        }, status=status.HTTP_200_OK)
+
 #new
 class UserProfileView(APIView):
     permission_classes = [IsAuthenticated]
+    parser_classes = (MultiPartParser, FormParser)
 
     def get(self, request):
         user = request.user
+        try:
+            profile = UserProfile.objects.get(user=user)
+            if profile.profile_picture:
+                profile_picture = request.build_absolute_uri(profile.profile_picture.url)
+            else:
+                profile_picture = f'https://ui-avatars.com/api/?name={user.username}&background=random'
+        except UserProfile.DoesNotExist:
+            profile_picture = f'https://ui-avatars.com/api/?name={user.username}&background=random'
         
-        # Default profile picture URL (you can change this path)
-        default_profile_picture = 'https://ui-avatars.com/api/?name=User+Name&background=random'
-
         return Response({
             'username': user.username,
             'email': user.email,
             'first_name': user.first_name,
             'last_name': user.last_name,
-            'profile_picture': default_profile_picture,
+            'profile_picture': profile_picture,
+            'date_joined': user.date_joined,
         }, status=status.HTTP_200_OK)
+
+    def post(self, request):
+        try:
+            user = request.user
+            profile_picture = request.FILES.get('profile_picture')
+            
+            if not profile_picture:
+                return Response({
+                    'error': 'No profile picture provided'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Validate file type
+            allowed_types = ['image/jpeg', 'image/png', 'image/gif']
+            if profile_picture.content_type not in allowed_types:
+                return Response({
+                    'error': 'Invalid file type. Only JPG, PNG, and GIF are allowed.'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Validate file size (2MB limit)
+            if profile_picture.size > 2 * 1024 * 1024:
+                return Response({
+                    'error': 'File size too large. Maximum size is 2MB.'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Get or create profile
+            profile, created = UserProfile.objects.get_or_create(user=user)
+            
+            # Delete old profile picture if it exists
+            if profile.profile_picture:
+                try:
+                    old_file_path = profile.profile_picture.path
+                    if os.path.exists(old_file_path):
+                        os.remove(old_file_path)
+                except Exception as e:
+                    print(f"Error deleting old profile picture: {e}")
+            
+            # Generate unique filename
+            file_extension = os.path.splitext(profile_picture.name)[1]
+            unique_filename = f"{user.username}_{uuid.uuid4().hex[:8]}{file_extension}"
+            
+            # Save the new profile picture
+            profile.profile_picture.save(
+                unique_filename,
+                profile_picture,
+                save=True
+            )
+            
+            # Build the full URL
+            profile_picture_url = request.build_absolute_uri(profile.profile_picture.url)
+            
+            return Response({
+                'message': 'Profile picture updated successfully',
+                'profile_picture': profile_picture_url
+            }, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            return Response({
+                'error': str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 class GetUserDocumentsView(APIView):
     def get(self, request):
         try:
@@ -380,7 +478,7 @@ class DocumentUploadView(APIView):
 
         # Parse the document using LlamaParse
         parser = LlamaParse(
-            api_key="llx-EuNzURDKKAGJ34LIr56Kwz3hlv4s9o8kmtf4VkBs5Dy7Hf24",
+            api_key="llx-ELriu1Ss7pRseKhI1GgCtaSbdyfyVz7UAFpGovz1ntPKVHcC",
             result_type="markdown",
             verbose=True,
             images=True,
@@ -501,7 +599,7 @@ class DocumentUploadView(APIView):
         prompt = f"""
         Please analyze this document '{file_name}' and provide:
         1. A concise summary of the main points and key findings
-        2. Three specific follow-up questions that would help understand the content better
+        
     
         Content: {truncated_content}
     
@@ -526,13 +624,7 @@ class DocumentUploadView(APIView):
         <b>Detailed Insights</b>
         <p>Expanded explanation of the document's core content and significance</p>
 
-        Follow-up questions should be concise and probing and use bullets to display.
-        <b>Follow Up questions</b>
-        <ul>
-            <li>First question</li>
-            <li>Second question</li>
-            <li>Third third question</li>
-        </ul>
+        
         """
     
         try:
@@ -621,6 +713,8 @@ class DeleteDocumentView(APIView):
                 {'error': f'Failed to delete document: {str(e)}'}, 
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+
 class GetChatHistoryView(APIView):
     def get(self, request):
         try:
@@ -783,6 +877,8 @@ def post_process_response(response_text):
     except Exception as e:
         logger.error(f"Error in post-processing response: {str(e)}", exc_info=True)
         return response_text
+
+
 class ChatView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -963,7 +1059,6 @@ class ChatView(APIView):
         RESPONSE GENERATION GUIDELINES:
         - Provide a clear, concise, and informative answer
         - Use semantic HTML tags for structure: <b>, <p>, <ul>, <li>
-        - Add citation references in [N] format
         - Maintain a natural, conversational tone
         - Ensure the response is directly derived from the provided context
 
@@ -985,20 +1080,17 @@ class ChatView(APIView):
         2. Use <b> tags for key section headings
         3. Utilize <p> tags for detailed explanations
         4. Employ <ul> and <li> for list-based information and use bullets to display it
-        5. Include [N] citations for each substantive claim
         6. Ensure the response flows naturally and is easy to read
 
         CRITICAL CONSTRAINTS:
         - Use ONLY information from the provided documents
         - NO external or speculative information
-        - MANDATORY citations for key points
         - Maintain clarity and readability
 
         GENERATE A RESPONSE THAT:
         - Directly addresses the query
         - Provides comprehensive information
         - Uses structured formatting
-        - Includes proper citations at the end of every respone
         """
         return prompt
 
@@ -1009,7 +1101,7 @@ class ChatView(APIView):
         try:
             # Prepare context for prompt
             context_contents = search_results.get('contents', [])
-            citations = search_results.get('citations', [])
+          
 
             # Generate enhanced prompt
             enhanced_prompt = self.generate_enhanced_prompt(
@@ -1032,25 +1124,19 @@ class ChatView(APIView):
                 }
             )
             
-             # Ensure citations are consistently marked
-            def mark_citations(text, citations):
-                for i, citation in enumerate(citations):
-                    # Add clear citation markers that can be replaced later
-                    marker = f"[{i+1}]"
-                    text = text.replace(marker, marker)
-                return text
             
             # Generate response
             response = model.generate_content(enhanced_prompt)
             # Post-process the response
             processed_response = self.post_process_func(response.text)
 
-            # New citation marking
-            marked_response = mark_citations(processed_response, search_results.get('citations', []))
+            # Remove citation markers [1], [2], etc.
+            clean_response = re.sub(r'\[(\d+)\]', '', processed_response)
+            
             # Generate follow-up questions
             follow_up_questions = self.generate_follow_up_questions(context_contents)
 
-            return mark_safe(marked_response), follow_up_questions
+            return mark_safe(clean_response.strip()), follow_up_questions
 
         except Exception as e:
             logger.error(f"Error in enhanced response generation: {str(e)}", exc_info=True)

@@ -29,6 +29,7 @@ class ProductIdea2(models.Model):
     dynamic_fields = models.JSONField(default=dict)
     number_of_ideas = models.IntegerField(default=1)
     created_at = models.DateTimeField(default=timezone.now)
+    negative_prompt = models.TextField(null=True, blank=True)
 
     def __str__(self):
         return f"{self.brand} - {self.product}"

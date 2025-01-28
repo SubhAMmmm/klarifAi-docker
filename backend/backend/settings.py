@@ -1,3 +1,5 @@
+
+
 """
 Django settings for backend project.
 
@@ -51,6 +53,7 @@ INSTALLED_APPS = [
     'ideaGen',
     'structruedDataQuery',
     'topicModelling',
+   
 ]
 
 
@@ -216,8 +219,7 @@ os.makedirs(os.path.join(MEDIA_ROOT, 'generated_images'), exist_ok=True)
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
-# In your settings.py
-LOCAL_SENTENCE_TRANSFORMER_PATH = r'C:\Users\TapasmitaPattanaik\Desktop\ReactClone\backend'
+
 
 # Email Configuration
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
@@ -248,3 +250,7 @@ LOGGING = {
         },
     },
 }
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+MEDIA_ROOT_PATH = os.path.join(BASE_DIR, 'media')
+PROFILE_PICTURES_PATH = os.path.join(MEDIA_ROOT_PATH, 'profile_pictures')
+os.makedirs(PROFILE_PICTURES_PATH, exist_ok=True)

@@ -1,5 +1,5 @@
 //IdeaForm.jsx
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect, useRef } from "react";
 import { ideaService } from "../utils/axiosConfig";
 import AdvancedRegenControls from "../components/AdvancedRegenControls";
 import Header from "./dashboard/Header";
@@ -7,7 +7,9 @@ import VersionHistory from "./VersionHistory";
 import { format } from "date-fns";
 import PowerPointExport from "./PowerPointExport";
 import { useProject } from "./ProjectManagement";
-import backgroundImage from '../assets/bg-main.jpg'; 
+import backgroundImage from "../assets/bg-main.jpg";
+import IdeaMetadata from "./IdeaMetadata";
+import ScrollNavigationButtons from "./ScrollNavigationButtons";
 
 import {
   PlusCircle,
@@ -19,24 +21,20 @@ import {
   ArrowLeft,
   Clock,
   ArrowRight,
-  Eye
+  ToggleRight,
+  ToggleLeft,
+  AlertTriangle,
 } from "lucide-react";
 
 const IdeaForm = () => {
-  const {
-    currentProject,
-    saveProject,
-    setShowProjectList
-  } = useProject();
+  const { currentProject, saveProject, setShowProjectList } = useProject();
 
-  // Add these state variables
-  
 
   // Initialize with empty dynamic fields
   const [dynamicFields, setDynamicFields] = useState({});
 
   // Predefined field types
-  const predefinedFieldTypes = ["Benefits", "RTB", "Ingredients", "Price"];
+  const predefinedFieldTypes = ["Benefits", "RTB", "Ingredients", "Features"];
   const [customFieldTypes, setCustomFieldTypes] = useState([]);
   const [newCustomField, setNewCustomField] = useState("");
 
@@ -63,31 +61,77 @@ const IdeaForm = () => {
 
   const [selectedVersion, setSelectedVersion] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
-  
 
-  
   const [rawVersionHistory, setRawVersionHistory] = useState({});
-  const [formData, setFormData] = useState({})
-
+  const [formData, setFormData] = useState({});
 
   const [projectName, setProjectName] = useState(
     currentProject?.name || `Project ${new Date().toLocaleDateString()}`
   );
 
-  // Add this effect to load project data
+  const [ideaMetadata, setIdeaMetadata] = useState({});
+
+  //to track field activation
+  const [fieldActivation, setFieldActivation] = useState({});
+
+  const [hasFormChanged, setHasFormChanged] = useState(false);
+
+
+  const [ideaSetCounter, setIdeaSetCounter] = useState(1);
+
+  //for negative prompt
+  const [negativePrompt, setNegativePrompt] = useState("");
+
+  const contentRef = useRef(null);
+
+  // Effect to scroll to top when ideas are generated or added
+
+  useEffect(() => {
+    // Ensure ideas exist and the ref is available
+    if (ideas.length > 0 && contentRef.current) {
+      // Use setTimeout to ensure DOM has updated
+      setTimeout(() => {
+        contentRef.current.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'start' 
+        });
+      }, 100);
+    }
+  }, [ideas.length]);
+
+  // to load project data
   useEffect(() => {
     if (currentProject) {
-      setFormData(currentProject.formData || {
-        product: "",
-        brand: "",
-        category: "",
-        number_of_ideas: 1,
-      });
-      setDynamicFields(currentProject.dynamicFields || {});
+      setFormData(
+        currentProject.formData || {
+          product: "",
+          brand: "",
+          category: "",
+          number_of_ideas: 1,
+          negative_prompt: "",
+        }
+      );
+      // Load dynamic fields
+      const loadedDynamicFields = currentProject.dynamicFields || {};
+      setDynamicFields(loadedDynamicFields);
+      // Preserve field activation state
+      // If fieldActivation is not set in the project, default to active
+      const preservedActivation = Object.keys(loadedDynamicFields).reduce(
+        (acc, fieldId) => {
+          // Only use stored activation if it explicitly exists, otherwise default to true
+          acc[fieldId] = currentProject.fieldActivation?.[fieldId] ?? true;
+          return acc;
+        },
+        {}
+      );
+      setFieldActivation(preservedActivation);
+      setIdeaMetadata(currentProject.ideaMetadata || {});
       setIdeas(currentProject.ideas || []);
       setAcceptedIdeas(currentProject.acceptedIdeas || []);
       setGeneratedImages(currentProject.generatedImages || {});
-      
+      setIdeaSetCounter(currentProject.ideaSetCounter || 1);
+      setNegativePrompt(currentProject.formData?.negative_prompt || "");
+
       // Check if we should navigate directly to ideas
       if (currentProject.skipToIdeas && currentProject.ideas?.length > 0) {
         setShowForm(false);
@@ -95,19 +139,25 @@ const IdeaForm = () => {
     }
   }, [currentProject]);
 
-   // Add this effect to auto-save changes
-   useEffect(() => {
+  // Add this effect to auto-save changes
+  useEffect(() => {
     if (currentProject || ideas.length > 0) {
       const projectData = {
         id: currentProject?.id,
         name: projectName,
-        formData,
+        formData: {
+          ...formData,
+          negative_prompt: negativePrompt, // Include negative prompt in saved data
+        },
         dynamicFields,
+        fieldActivation,
         ideas,
         acceptedIdeas,
         generatedImages,
         showForm,
         showImageGeneration,
+        ideaMetadata,
+        ideaSetCounter,
       };
       saveProject(projectData);
     }
@@ -115,11 +165,15 @@ const IdeaForm = () => {
     projectName,
     formData,
     dynamicFields,
+    fieldActivation,
     ideas,
     acceptedIdeas,
     generatedImages,
     showForm,
     showImageGeneration,
+    ideaMetadata,
+    ideaSetCounter,
+    negativePrompt,
   ]);
 
   const renderNavigation = () => (
@@ -130,7 +184,7 @@ const IdeaForm = () => {
           className="px-4 py-2 bg-gray-700 hover:bg-gray-600 border border-gray-600 hover:border-green-500/50 text-white rounded-lg transition-colors flex items-center gap-2"
         >
           <ArrowLeft size={16} />
-          All Projects
+          All Idea Projects
         </button>
         <input
           type="text"
@@ -152,27 +206,24 @@ const IdeaForm = () => {
     </div>
   );
 
-
-
   // Add this function to fetch version history for all ideas
   const fetchAllVersionHistories = async () => {
-    
     try {
       for (const idea of acceptedIdeas) {
         const response = await ideaService.getIdeaHistory(idea.idea_id);
-        console.log('Fetched version history:', response.data.history);
+        console.log("Fetched version history:", response.data.history);
         if (response.data.success) {
-          setRawVersionHistory(prevHistory => ({
+          setRawVersionHistory((prevHistory) => ({
             ...prevHistory,
-            history: response.data.history
+            history: response.data.history,
           }));
         }
       }
     } catch (err) {
-      console.error('Error fetching version histories:', err);
+      console.error("Error fetching version histories:", err);
     }
-    
-    console.log('Updated rawVersionHistory:', rawVersionHistory);
+
+    console.log("Updated rawVersionHistory:", rawVersionHistory);
   };
 
   useEffect(() => {
@@ -303,16 +354,21 @@ const IdeaForm = () => {
           idea_id: response.data.updated_data.idea_id,
           product_name: response.data.updated_data.product_name,
           description: response.data.updated_data.description,
+          // Preserve the original ideaSet and ideaSetLabel
+          ideaSet: ideas.find((idea) => idea.idea_id === ideaId)?.ideaSet,
+          ideaSetLabel: ideas.find((idea) => idea.idea_id === ideaId)
+            ?.ideaSetLabel,
         };
 
-        // Update both ideas and acceptedIdeas arrays
         setIdeas(
-          ideas.map((idea) => (idea.idea_id === ideaId ? updatedIdea : idea))
+          ideas.map((idea) =>
+            idea.idea_id === ideaId ? { ...idea, ...updatedIdea } : idea
+          )
         );
 
         setAcceptedIdeas(
           acceptedIdeas.map((idea) =>
-            idea.idea_id === ideaId ? updatedIdea : idea
+            idea.idea_id === ideaId ? { ...idea, ...updatedIdea } : idea
           )
         );
 
@@ -442,10 +498,10 @@ const IdeaForm = () => {
     const { name, value } = e.target;
     if (name === "number_of_ideas") {
       setHasManuallySetIdeas(true);
-      const numValue = value === '' ? '' : parseInt(value);
+      const numValue = value === "" ? "" : parseInt(value);
       setFormData((prev) => ({
         ...prev,
-        [name]: numValue
+        [name]: numValue,
       }));
     } else {
       setFormData((prev) => ({
@@ -453,6 +509,8 @@ const IdeaForm = () => {
         [name]: value,
       }));
     }
+    // Mark form as changed
+    setHasFormChanged(true);
   };
 
   const handleDynamicFieldChange = (fieldId, value) => {
@@ -460,6 +518,8 @@ const IdeaForm = () => {
       ...prev,
       [fieldId]: { ...prev[fieldId], value },
     }));
+    // Mark form as changed
+    setHasFormChanged(true);
   };
 
   const addField = (type) => {
@@ -468,14 +528,26 @@ const IdeaForm = () => {
     ).length;
 
     const newFieldId = `${type.toLowerCase()}-${fieldCount + 1}`;
-    
+
     // Create new fields object with new field at the top
     const updatedFields = {
-      [newFieldId]: { type, value: "" },
-      ...dynamicFields
+      [newFieldId]: {
+        type,
+        value: "",
+        // By default, new fields are active
+        active: true,
+      },
+      ...dynamicFields,
+    };
+
+    // Update field activation state
+    const updatedActivation = {
+      [newFieldId]: true,
+      ...fieldActivation,
     };
 
     setDynamicFields(updatedFields);
+    setFieldActivation(updatedActivation);
     setHasManuallySetIdeas(false);
   };
   const removeField = (fieldId) => {
@@ -484,7 +556,28 @@ const IdeaForm = () => {
       delete newFields[fieldId];
       return newFields;
     });
+
+    // Remove the field from activation state
+    setFieldActivation((prev) => {
+      const newActivation = { ...prev };
+      delete newActivation[fieldId];
+      return newActivation;
+    });
+
     // Reset manual override when removing fields
+    setHasManuallySetIdeas(false);
+  };
+  // New function to toggle field activation
+  const toggleFieldActivation = (fieldId) => {
+    setFieldActivation((prev) => ({
+      ...prev,
+      [fieldId]: !prev[fieldId],
+    }));
+
+    // Explicitly set hasFormChanged to true when toggling field activation
+    setHasFormChanged(true);
+
+    // Optionally reset manual idea setting when toggling
     setHasManuallySetIdeas(false);
   };
 
@@ -496,31 +589,98 @@ const IdeaForm = () => {
     }
   };
 
+  // New method to navigate to ideas without generating
+  const handleNavigateToIdeas = () => {
+    // If no ideas exist, generate with current form data
+    if (ideas.length === 0) {
+      handleSubmit(new Event("submit"));
+    } else {
+      setShowForm(false);
+    }
+  };
+
+  // Modify useEffect to reset hasFormChanged when ideas are generated
+  useEffect(() => {
+    if (ideas.length > 0) {
+      setHasFormChanged(false);
+    }
+  }, [ideas]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     setIsGenerating(true);
     setError(null);
-  
+
+    // Filter dynamic fields to include only active ones
+    const activeFields = Object.entries(dynamicFields)
+      .filter(([fieldId]) => fieldActivation[fieldId] !== false)
+      .reduce(
+        (acc, [fieldId, field]) => ({
+          ...acc,
+          [fieldId]: field,
+        }),
+        {}
+      );
+
     const submissionData = {
       ...formData,
-      dynamicFields,
+      dynamicFields: activeFields,
+      negative_prompt: negativePrompt,
     };
-  
+
     try {
       const response = await ideaService.generateIdeas(submissionData);
-  
+
       if (response.data.success) {
+        const newIdeas = (response.data.ideas || []).map((idea, index) => ({
+          ...idea,
+          ideaSetLabel: `Set ${ideaSetCounter}-${index + 1}`,
+          ideaSet: ideaSetCounter, // Add set number to each idea
+        }));
+        // Log to verify metadata creation
+        console.log("New Ideas:", newIdeas);
+
+        // Create metadata for these new ideas
+        const newIdeaMetadata = newIdeas.reduce((acc, idea) => {
+          acc[idea.idea_id] = {
+            baseData: {
+              product: formData.product,
+              category: formData.category,
+              brand: formData.brand,
+              number_of_ideas: formData.number_of_ideas,
+              ideaSet: ideaSetCounter,
+              ideaSetLabel: idea.ideaSetLabel,
+              negative_prompt: negativePrompt,
+            },
+            dynamicFields: activeFields,
+            timestamp: new Date().toISOString(),
+          };
+          return acc;
+        }, {});
+        console.log("New Idea Metadata:", newIdeaMetadata);
+        console.log("Current Idea Metadata State:", ideaMetadata);
+
+        // Merge new metadata with existing
+        setIdeaMetadata((prev) => ({
+          ...prev,
+          ...newIdeaMetadata,
+        }));
         // Ensure we're properly spreading both arrays and handling the state update
-        setIdeas(prevIdeas => {
-          const newIdeas = response.data.ideas || [];
+        setIdeas((prevIdeas) => {
           // Filter out any duplicate ideas based on idea_id
           const uniqueNewIdeas = newIdeas.filter(
-            newIdea => !prevIdeas.some(existingIdea => existingIdea.idea_id === newIdea.idea_id)
+            (newIdea) =>
+              !prevIdeas.some(
+                (existingIdea) => existingIdea.idea_id === newIdea.idea_id
+              )
           );
           return [...uniqueNewIdeas, ...prevIdeas];
         });
-        
+
+        // Increment the idea set counter
+        setIdeaSetCounter((prev) => prev + 1);
+
         // Only switch to ideas view if this is the first generation
         if (showForm) {
           setShowForm(false);
@@ -536,8 +696,6 @@ const IdeaForm = () => {
       setIsGenerating(false);
     }
   };
-
-  
 
   const handleNewIdea = () => {
     setShowForm(true);
@@ -771,22 +929,23 @@ const IdeaForm = () => {
   };
 
   return (
-    <div 
+    <div
+    ref={contentRef}
       className="min-h-screen relative"
       style={{
         backgroundImage: `url(${backgroundImage})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat',
-        backgroundAttachment: 'fixed'
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat",
+        backgroundAttachment: "fixed",
       }}
     >
       {/* Add an overlay to ensure content readability */}
       <div className="absolute inset-0 bg-black/50" />
-      
+      <ScrollNavigationButtons />
       {/* Wrap all content in a relative container to appear above the overlay */}
       <div className="relative">
-        <nav className="navbar">
+        <nav  className="navbar">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <Header />
             <div className="flex items-center justify-center h-16">
@@ -795,555 +954,656 @@ const IdeaForm = () => {
           </div>
         </nav>
 
-      <main className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto space-y-8">
-        {renderNavigation()}
-          {showForm ? (
-            <div className="form-card animate-fade-in bg-gray-900/90 backdrop-blur-sm">
-              <h2 className="text-2xl font-bold text-white text-center mb-8">
-                Generate Product Ideas
-              </h2>
-              <form onSubmit={handleSubmit} className="space-y-8">
-                {/* Base Fields */}
-                <div className="space-y-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Product <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      id="product"
-                      name="product"
-                      value={formData.product}
-                      onChange={handleBaseFieldChange}
-                      required
-                      className="input-field w-full"
-                      placeholder="Enter product name"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Category <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      id="category"
-                      name="category"
-                      value={formData.category}
-                      onChange={handleBaseFieldChange}
-                      required
-                      className="input-field w-full"
-                      placeholder="Enter category"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Brand
-                    </label>
-                    <input
-                      type="text"
-                      id="brand"
-                      name="brand"
-                      value={formData.brand}
-                      onChange={handleBaseFieldChange}
-                      className="input-field w-full"
-                      placeholder="Enter brand name"
-                    />
-                  </div>
-                </div>
-
-                {/* Dynamic Fields Section */}
-                <div className="space-y-6">
-                  <div className="border-t border-gray-700 pt-6">
-                    <h3 className="text-lg font-medium text-white mb-4">
-                      Dynamic Fields
-                    </h3>
-
-                    {/* Custom Field Addition */}
-                    <div className="bg-gray-700/50 p-4 rounded-lg space-y-4">
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          value={newCustomField}
-                          onChange={(e) => setNewCustomField(e.target.value)}
-                          placeholder="Add custom field type..."
-                          className="input-field flex-1"
-                        />
-                        <button
-                          type="button"
-                          onClick={addCustomFieldType}
-                          className="btn btn-secondary whitespace-nowrap bg-gradient-to-r from-blue-500 to-emerald-500 text-white rounded-lg hover:from-blue-600 hover:to-emerald-600 transition-all"
-                        >
-                          Add Field Type
-                        </button>
-                      </div>
-                      {/* Predefined Field Buttons */}
-                      <div className="flex flex-wrap gap-3 mb-4">
-                        {predefinedFieldTypes.map((type) => (
-                          <button
-                            key={type}
-                            type="button"
-                            onClick={() => addField(type)}
-                            className="btn btn-primary bg-gradient-to-r from-blue-500 to-emerald-500 text-white rounded-lg hover:from-blue-600 hover:to-emerald-600"
-                          >
-                            <PlusCircle size={16} className="mr-2" /> {type}
-                          </button>
-                        ))}
-                        {customFieldTypes.length > 0 && (
-                          <div className="flex flex-wrap gap-2">
-                            {customFieldTypes.map((type) => (
-                              <button
-                                key={type}
-                                type="button"
-                                onClick={() => addField(type)}
-                                className="btn btn-secondary bg-gradient-to-r from-blue-500 to-emerald-500 "
-                              >
-                                <PlusCircle size={16} className="mr-2" /> {type}
-                              </button>
-                            ))}
-                          </div>
-                        )}
-                      </div>
+        <main className="container mx-auto px-4 py-8">
+          <div className="max-w-4xl mx-auto space-y-8">
+            {renderNavigation()}
+            {showForm ? (
+              <div className="form-card animate-fade-in bg-gray-900/90 backdrop-blur-sm">
+                <h2 className="text-2xl font-bold text-white text-center mb-8">
+                  Generate Product Ideas
+                </h2>
+                <form onSubmit={handleSubmit} className="space-y-8">
+                  {/* Base Fields */}
+                  <div className="space-y-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                        Product <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        id="product"
+                        name="product"
+                        value={formData.product}
+                        onChange={handleBaseFieldChange}
+                        required
+                        className="input-field w-full"
+                        placeholder="Enter product name"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                        Category <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        id="category"
+                        name="category"
+                        value={formData.category}
+                        onChange={handleBaseFieldChange}
+                        required
+                        className="input-field w-full"
+                        placeholder="Enter category"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                        Brand
+                      </label>
+                      <input
+                        type="text"
+                        id="brand"
+                        name="brand"
+                        value={formData.brand}
+                        onChange={handleBaseFieldChange}
+                        className="input-field w-full"
+                        placeholder="Enter brand name"
+                      />
                     </div>
                   </div>
 
-                  {/* Dynamic Field Inputs */}
-                  <div className="space-y-4 mt-6">
-                    {Object.entries(dynamicFields).map(([fieldId, field]) => (
-                      <div key={fieldId} className="flex gap-2">
-                        <div className="flex-1">
-                          <label className="block text-sm font-medium text-gray-300 mb-2">
-                            {field.type}
-                          </label>
+                  {/* Dynamic Fields Section */}
+                  <div className="space-y-6">
+                    <div className="border-t border-gray-700 pt-6">
+                      <h3 className="text-lg font-medium text-white mb-4">
+                        Dynamic Fields
+                      </h3>
+
+                      {/* Custom Field Addition */}
+                      <div className="bg-gray-700/50 p-4 rounded-lg space-y-4">
+                        <div className="flex gap-2">
                           <input
                             type="text"
-                            value={field.value}
-                            onChange={(e) =>
-                              handleDynamicFieldChange(fieldId, e.target.value)
-                            }
-                            className="input-field"
-                            placeholder={`Enter ${field.type.toLowerCase()}`}
+                            value={newCustomField}
+                            onChange={(e) => setNewCustomField(e.target.value)}
+                            placeholder="Add custom field type..."
+                            className="input-field flex-1"
                           />
+                          <button
+                            type="button"
+                            onClick={addCustomFieldType}
+                            className="btn btn-secondary whitespace-nowrap bg-gradient-to-r from-blue-500 to-emerald-500 text-white rounded-lg hover:from-blue-600 hover:to-emerald-600 transition-all"
+                          >
+                            Add Field Type
+                          </button>
                         </div>
+                        {/* Predefined Field Buttons */}
+                        <div className="flex flex-wrap gap-3 mb-4">
+                          {predefinedFieldTypes.map((type) => (
+                            <button
+                              key={type}
+                              type="button"
+                              onClick={() => addField(type)}
+                              className="btn btn-primary bg-gradient-to-r from-blue-500 to-emerald-500 text-white rounded-lg hover:from-blue-600 hover:to-emerald-600"
+                            >
+                              <PlusCircle size={16} className="mr-2" /> {type}
+                            </button>
+                          ))}
+                          {customFieldTypes.length > 0 && (
+                            <div className="flex flex-wrap gap-2">
+                              {customFieldTypes.map((type) => (
+                                <button
+                                  key={type}
+                                  type="button"
+                                  onClick={() => addField(type)}
+                                  className="btn btn-secondary bg-gradient-to-r from-blue-500 to-emerald-500 "
+                                >
+                                  <PlusCircle size={16} className="mr-2" />{" "}
+                                  {type}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Dynamic Field Inputs */}
+                    <div className="space-y-4 mt-6">
+                      {Object.entries(dynamicFields).map(([fieldId, field]) => (
+                        <div key={fieldId} className="flex gap-2 item-center">
+                          <div className="flex-1 ">
+                            <div className="flex flex-1 gap-2">
+                              <label className="block text-sm font-medium text-gray-300 mb-2">
+                                {field.type}
+                              </label>
+                              {/* Activation Toggle */}
+                              <button
+                                type="button"
+                                onClick={() => toggleFieldActivation(fieldId)}
+                                className="text-gray-400 hover:text-white transition-colors mb-2"
+                                title={
+                                  fieldActivation[fieldId]
+                                    ? "Deactivate"
+                                    : "Activate"
+                                }
+                              >
+                                {fieldActivation[fieldId] ? (
+                                  <ToggleRight
+                                    size={24}
+                                    className="text-green-500"
+                                  />
+                                ) : (
+                                  <ToggleLeft
+                                    size={24}
+                                    className="text-gray-600"
+                                  />
+                                )}
+                              </button>
+                            </div>
+                            <input
+                              type="text"
+                              value={field.value}
+                              onChange={(e) =>
+                                handleDynamicFieldChange(
+                                  fieldId,
+                                  e.target.value
+                                )
+                              }
+                              className={`input-field ${
+                                fieldActivation[fieldId] === false
+                                  ? "opacity-50"
+                                  : ""
+                              }`}
+                              placeholder={`Enter ${field.type.toLowerCase()}`}
+                              disabled={fieldActivation[fieldId] === false}
+                            />
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => removeField(fieldId)}
+                            className="btn btn-danger self-end"
+                          >
+                            <X size={20} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="mt-6">
+                    <div className="flex items-center mb-2">
+                      <label className="block text-sm font-medium text-gray-300 mr-2">
+                        Negative Prompt
+                      </label>
+
+                      <AlertTriangle size={16} className="text-blue-400" />
+                    </div>
+                    <textarea
+                      value={negativePrompt}
+                      onChange={(e) => setNegativePrompt(e.target.value)}
+                      className="input-field w-full"
+                      placeholder="Enter terms or concepts to exclude (comma-separated)"
+                      rows={3}
+                    />
+                    <p className="text-xs text-gray-400 mt-2">
+                      Separate multiple terms with commas for best results
+                    </p>
+                  </div>
+                  {/* Number of Ideas Input */}
+                  <div className="border-t border-gray-700 pt-6">
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Number of Ideas {!hasManuallySetIdeas}
+                    </label>
+                    <div className="flex items-center gap-4">
+                      <input
+                        type="number"
+                        name="number_of_ideas"
+                        value={formData.number_of_ideas}
+                        onChange={handleBaseFieldChange}
+                        min="1"
+                        required
+                        className="input-field w-full md:w-1/4"
+                      />
+                      {hasManuallySetIdeas && (
                         <button
                           type="button"
-                          onClick={() => removeField(fieldId)}
-                          className="btn btn-danger self-end"
+                          onClick={() => setHasManuallySetIdeas(false)}
+                          className="text-sm text-indigo-400 hover:text-indigo-300"
                         >
-                          <X size={20} />
+                          Reset to Auto
                         </button>
-                      </div>
-                    ))}
+                      )}
+                    </div>
                   </div>
-                </div>
 
-                {/* Number of Ideas Input */}
-                <div className="border-t border-gray-700 pt-6">
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Number of Ideas{" "}
-                    {!hasManuallySetIdeas }
-                  </label>
-                  <div className="flex items-center gap-4">
-                    <input
-                      type="number"
-                      name="number_of_ideas"
-                      value={formData.number_of_ideas}
-                      onChange={handleBaseFieldChange}
-                      min="1"
-                      required
-                      className="input-field w-full md:w-1/4"
-                    />
-                    {hasManuallySetIdeas && (
+                  {/* Generate Button */}
+                  <div className="flex justify-center pt-6 space-x-4">
+                    <button
+                      type="submit"
+                      disabled={!hasFormChanged}
+                      className={`btn btn-primary px-12 py-3 text-lg bg-gradient-to-r from-blue-500 to-emerald-500 text-white rounded-lg transition-all ${
+                        !hasFormChanged
+                          ? "opacity-50 cursor-not-allowed"
+                          : "hover:from-blue-600 hover:to-emerald-600"
+                      }`}
+                    >
+                      {isLoading ? (
+                        <div className="flex items-center justify-center">
+                          <div className="loading-spinner mr-2"></div>
+                          Generating...
+                        </div>
+                      ) : (
+                        "Generate Ideas"
+                      )}
+                    </button>
+                    {ideas.length > 0 && (
                       <button
                         type="button"
-                        onClick={() => setHasManuallySetIdeas(false)}
-                        className="text-sm text-indigo-400 hover:text-indigo-300"
+                        onClick={handleNavigateToIdeas}
+                        className="btn btn-secondary px-12 py-3 text-lg bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-all"
                       >
-                        Reset to Auto
+                        View Existing Ideas
                       </button>
                     )}
                   </div>
-                </div>
-
-                {/* Generate Button */}
-                <div className="flex justify-center pt-6">
-                  <button
-                    type="submit"
-                    disabled={isLoading}
-                    className="btn btn-primary px-12 py-3 text-lg bg-gradient-to-r from-blue-500 to-emerald-500 text-white rounded-lg hover:from-blue-600 hover:to-emerald-600 transition-all"
-                  >
-                    {isLoading ? (
-                      <div className="flex items-center justify-center">
-                        <div className="loading-spinner mr-2"></div>
-                        Generating...
-                      </div>
-                    ) : (
-                      "Generate Ideas"
-                    )}
-                  </button>
-                </div>
-              </form>
-            </div>
-          ) : showImageGeneration ? (
-            <div className="form-card animate-fade-in bg-gray-900/90 backdrop-blur-sm">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-2xl font-bold text-white">
-                  Image Generation
-                </h3>
-                <div className="flex gap-4">
-                  <button
-                    onClick={handleBackToIdeas}
-                    className="btn btn-secondary"
-                  >
-                    <ArrowLeft size={16} />
-                    Back to Ideas
-                  </button>
-                  <PowerPointExport
-                  ideas={acceptedIdeas}
-                  generatedImages={generatedImages}
-                  versionHistory={rawVersionHistory}
-                />
-                </div>
+                </form>
               </div>
-
-              <div className="space-y-6">
-                {acceptedIdeas.map((idea) => {
-                  const ideaId = idea.idea_id.toString();
-                  const isEditing = editingIdea === idea.idea_id;
-
-                  return (
-                    <div key={ideaId} className="idea-card idea-card-accepted">
-                      <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
-                        <div className="flex-1">
-                          {isEditing ? (
-                            <div className="space-y-4">
-                              <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-2">
-                                  Product Name
-                                </label>
-                                <input
-                                  type="text"
-                                  name="product_name"
-                                  value={editForm.product_name}
-                                  onChange={handleEditChange}
-                                  className="input-field"
-                                />
-                              </div>
-                              <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-2">
-                                  Description
-                                </label>
-                                <textarea
-                                  name="description"
-                                  value={editForm.description}
-                                  onChange={handleEditChange}
-                                  rows={3}
-                                  className="input-field"
-                                />
-                              </div>
-                              <div className="flex gap-2">
-                                <button
-                                  onClick={() => handleUpdateIdea(idea.idea_id)}
-                                  className="btn btn-success"
-                                >
-                                  <Check size={16} /> Save
-                                </button>
-                                <button
-                                  onClick={() => setEditingIdea(null)}
-                                  className="btn btn-secondary"
-                                >
-                                  Cancel
-                                </button>
-                              </div>
-                            </div>
-                          ) : (
-                            <>
-                              <h4 className="text-xl font-semibold text-white mb-2">
-                                {idea.product_name}
-                              </h4>
-                              <p className="text-gray-300 mb-4">
-                                {idea.description}
-                              </p>
-                              <div className="flex flex-wrap gap-2">
-                                {generatedImages[ideaId] && (
-                                  <AdvancedRegenControls
-                                    idea={idea}
-                                    onRegenerate={handleRegenerateImage}
-                                    isLoading={loadingStates[ideaId]}
-                                  />
-                                )}
-                  
-                                <button
-                                  onClick={() => handleViewHistory(idea)}
-                                  className="btn btn-secondary bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white"
-                                  title="Versions History"
-                                >
-                                  <Clock size={16} />
-                                </button>
-                                <button
-                                  onClick={() => handleEdit(idea)}
-                                  className="btn btn-warning"
-                                  title="Edit ideas"
-                                >
-                                  <Edit2 size={16} />
-                                </button>
-                              </div>
-                            </>
-                          )}
-                        </div>
-
-                        <div className="w-full md:w-1/2 lg:w-1/3">
-                          {generatedImages[ideaId] ? (
-                            <div className="relative aspect-square rounded-lg overflow-hidden">
-                              <img
-                                src={generatedImages[ideaId]}
-                                alt={idea.product_name}
-                                className="object-cover w-full h-full"
-                              />
-                            </div>
-                          ) : (
-                            <div className="flex items-center justify-center h-full">
-                              {loadingStates[ideaId] ? (
-                                <div className="loading-spinner"></div>
-                              ) : (
-                                <span className="text-gray-400">
-                                  Image pending generation
-                                </span>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          ) : (
-            <div className="form-card animate-fade-in bg-gray-900/90 backdrop-blur-sm">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-2xl font-bold text-white">
-                  Generated Ideas
-                </h3>
-                <div className="flex gap-4">
-                  <button
-                    onClick={handleBackToForm}
-                    className="btn btn-secondary"
-                  >
-                    <ArrowLeft size={16} className="mr-2" />
-                    Back to Form
-                  </button>
-                  <button
-                    onClick={handleProceedToImages}
-                    className="bg-gradient-to-r from-blue-500 to-emerald-500 text-white rounded-lg hover:from-blue-600 hover:to-emerald-600 transition-all btn btn-primary"
-                    disabled={acceptedIdeas.length === 0}
-                  >
-                    <Image size={20} className="mr-2" />
-                    Generate Images
-                    <ArrowRight size={16} className="mr-2" />
-                  </button>
-                </div>
-              </div>
-
-              <div className="space-y-6">
-                {ideas.map((idea) => {
-                  const ideaId = idea.idea_id.toString();
-                  const isEditing = editingIdea === idea.idea_id;
-                  const isAccepted = acceptedIdeas.some(
-                    (accepted) => accepted.idea_id === idea.idea_id
-                  );
-
-                  return (
-                    <div
-                      key={ideaId}
-                      className={`idea-card ${
-                        isAccepted ? "idea-card-accepted" : "idea-card-pending"
-                      }`}
+            ) : showImageGeneration ? (
+              <div className="form-card animate-fade-in bg-gray-900/90 backdrop-blur-sm">
+                <div className="flex justify-between items-center mb-6">
+                  <h3 className="text-2xl font-bold text-white">
+                    Image Generation
+                  </h3>
+                  <div className="flex gap-4">
+                    <button
+                      onClick={handleBackToIdeas}
+                      className="btn btn-secondary"
                     >
-                      <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
-                        <div className="flex-1">
-                          {isEditing ? (
-                            <div className="space-y-4">
-                              <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-2">
-                                  Product Name
-                                </label>
-                                <input
-                                  type="text"
-                                  name="product_name"
-                                  value={editForm.product_name}
-                                  onChange={handleEditChange}
-                                  className="input-field"
+                      <ArrowLeft size={16} />
+                      Back to Ideas
+                    </button>
+                    <PowerPointExport
+                      ideas={acceptedIdeas}
+                      generatedImages={generatedImages}
+                      versionHistory={rawVersionHistory}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-6">
+                  {acceptedIdeas.map((idea) => {
+                    const ideaId = idea.idea_id.toString();
+                    const isEditing = editingIdea === idea.idea_id;
+
+                    return (
+                      <div
+                        key={ideaId}
+                        className="idea-card idea-card-accepted"
+                      >
+                        <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
+                          <div className="flex-1">
+                            {isEditing ? (
+                              <div className="space-y-4">
+                                <div>
+                                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                                    Product Name
+                                  </label>
+                                  <input
+                                    type="text"
+                                    name="product_name"
+                                    value={editForm.product_name}
+                                    onChange={handleEditChange}
+                                    className="input-field"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                                    Description
+                                  </label>
+                                  <textarea
+                                    name="description"
+                                    value={editForm.description}
+                                    onChange={handleEditChange}
+                                    rows={3}
+                                    className="input-field"
+                                  />
+                                </div>
+                                <div className="flex gap-2">
+                                  <button
+                                    onClick={() =>
+                                      handleUpdateIdea(idea.idea_id)
+                                    }
+                                    className="btn btn-success"
+                                  >
+                                    <Check size={16} /> Save
+                                  </button>
+                                  <button
+                                    onClick={() => setEditingIdea(null)}
+                                    className="btn btn-secondary"
+                                  >
+                                    Cancel
+                                  </button>
+                                </div>
+                              </div>
+                            ) : (
+                              <>
+                                <h4 className="text-xl font-semibold text-white mb-2">
+                                  {idea.product_name}
+                                  <span className="text-sm text-emerald-400 ml-2">
+                                    (
+                                    {idea.ideaSetLabel ||
+                                      `Set ${idea.ideaSet || "N/A"}`}
+                                    )
+                                  </span>
+                                </h4>
+
+                                <p className="text-gray-300 mb-4">
+                                  {idea.description}
+                                </p>
+                                <div className="flex flex-wrap gap-2">
+                                  {generatedImages[ideaId] && (
+                                    <AdvancedRegenControls
+                                      idea={idea}
+                                      onRegenerate={handleRegenerateImage}
+                                      isLoading={loadingStates[ideaId]}
+                                    />
+                                  )}
+
+                                  <button
+                                    onClick={() => handleViewHistory(idea)}
+                                    className="btn btn-secondary bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white"
+                                    title="Versions History"
+                                  >
+                                    <Clock size={16} />
+                                  </button>
+                                  <button
+                                    onClick={() => handleEdit(idea)}
+                                    className="btn btn-warning"
+                                    title="Edit ideas"
+                                  >
+                                    <Edit2 size={16} />
+                                  </button>
+                                  <IdeaMetadata
+                                    ideaMetadata={ideaMetadata[idea.idea_id]}
+                                  />
+                                </div>
+                              </>
+                            )}
+                          </div>
+
+                          <div className="w-full md:w-1/2 lg:w-1/3">
+                            {generatedImages[ideaId] ? (
+                              <div className="relative aspect-square rounded-lg overflow-hidden">
+                                <img
+                                  src={generatedImages[ideaId]}
+                                  alt={idea.product_name}
+                                  className="object-cover w-full h-full"
                                 />
                               </div>
-                              <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-2">
-                                  Description
-                                </label>
-                                <textarea
-                                  name="description"
-                                  value={editForm.description}
-                                  onChange={handleEditChange}
-                                  rows={3}
-                                  className="input-field"
-                                />
+                            ) : (
+                              <div className="flex items-center justify-center h-full">
+                                {loadingStates[ideaId] ? (
+                                  <div className="loading-spinner"></div>
+                                ) : (
+                                  <span className="text-gray-400">
+                                    Image pending generation
+                                  </span>
+                                )}
                               </div>
-                              <div className="flex gap-2">
-                                <button
-                                  onClick={() => handleUpdateIdea(idea.idea_id)}
-                                  className="btn btn-success"
-                                >
-                                  <Check size={16} /> Save
-                                </button>
-                                <button
-                                  onClick={() => setEditingIdea(null)}
-                                  className="btn btn-secondary"
-                                >
-                                  Cancel
-                                </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : (
+              <div className="form-card animate-fade-in bg-gray-900/90 backdrop-blur-sm">
+                <div className="flex justify-between items-center mb-6">
+                  <h3 className="text-2xl font-bold text-white">
+                    Generated Ideas
+                  </h3>
+                  <div className="flex gap-4">
+                    <button
+                      onClick={handleBackToForm}
+                      className="btn btn-secondary"
+                    >
+                      <ArrowLeft size={16} className="mr-2" />
+                      Back to Form
+                    </button>
+                    <button
+                      onClick={handleProceedToImages}
+                      className="bg-gradient-to-r from-blue-500 to-emerald-500 text-white rounded-lg hover:from-blue-600 hover:to-emerald-600 transition-all btn btn-primary"
+                      disabled={acceptedIdeas.length === 0}
+                    >
+                      <Image size={20} className="mr-2" />
+                      Generate Images
+                      <ArrowRight size={16} className="mr-2" />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-6">
+                  {ideas.map((idea) => {
+                    const ideaId = idea.idea_id.toString();
+                    const isEditing = editingIdea === idea.idea_id;
+                    const isAccepted = acceptedIdeas.some(
+                      (accepted) => accepted.idea_id === idea.idea_id
+                    );
+
+                    return (
+                      <div
+                        key={ideaId}
+                        className={`idea-card ${
+                          isAccepted
+                            ? "idea-card-accepted"
+                            : "idea-card-pending"
+                        }`}
+                      >
+                        <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
+                          <div className="flex-1">
+                            {isEditing ? (
+                              <div className="space-y-4">
+                                <div>
+                                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                                    Product Name
+                                  </label>
+                                  <input
+                                    type="text"
+                                    name="product_name"
+                                    value={editForm.product_name}
+                                    onChange={handleEditChange}
+                                    className="input-field"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                                    Description
+                                  </label>
+                                  <textarea
+                                    name="description"
+                                    value={editForm.description}
+                                    onChange={handleEditChange}
+                                    rows={3}
+                                    className="input-field"
+                                  />
+                                </div>
+                                <div className="flex gap-2">
+                                  <button
+                                    onClick={() =>
+                                      handleUpdateIdea(idea.idea_id)
+                                    }
+                                    className="btn btn-success"
+                                  >
+                                    <Check size={16} /> Save
+                                  </button>
+                                  <button
+                                    onClick={() => setEditingIdea(null)}
+                                    className="btn btn-secondary"
+                                  >
+                                    Cancel
+                                  </button>
+                                </div>
                               </div>
-                            </div>
-                          ) : (
-                            <>
-                              <h4 className="text-xl font-semibold text-white mb-2">
-                                {idea.product_name}
-                              </h4>
-                              <p className="text-gray-300 mb-4">
-                                {idea.description}
-                              </p>
-                              <div className="flex flex-wrap gap-2">
-                                <button
+                            ) : (
+                              <>
+                                <div className="flex flex-1 gap-2">
+                                  <h4 className="text-xl font-semibold text-white mb-2">
+                                    {idea.product_name}
+                                    <span className="text-sm text-emerald-400 ml-2">
+                                      (
+                                      {idea.ideaSetLabel ||
+                                        `Set ${idea.ideaSet || "N/A"}`}
+                                      )
+                                    </span>
+                                  </h4>
+                                </div>
+
+                                <p className="text-gray-300 mb-4">
+                                  {idea.description}
+                                </p>
+
+                                <div className="flex flex-wrap gap-2">
+                                  <button
                                     onClick={() => handleEdit(idea)}
                                     className="btn btn-warning"
                                     title="Edit idea"
                                   >
                                     <Edit2 size={16} />
                                   </button>
-                                {isAccepted ? (
+
+                                  {isAccepted ? (
+                                    <button
+                                      onClick={() =>
+                                        handleUnaccept(idea.idea_id)
+                                      }
+                                      className=" min-w-[100px] bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors"
+                                    >
+                                      <Check size={16} /> Accepted
+                                    </button>
+                                  ) : (
+                                    <button
+                                      onClick={() => handleAccept(idea.idea_id)}
+                                      className=" min-w-[100px] bg-gray-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors"
+                                    >
+                                      Accept
+                                    </button>
+                                  )}
+
                                   <button
-                                    onClick={() => handleUnaccept(idea.idea_id)}
-                                    className=" min-w-[100px] bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors"
+                                    onClick={() => handleReject(idea.idea_id)}
+                                    className="btn btn-danger"
                                   >
-                                    <Check size={16} /> Accepted
+                                    <X size={16} /> Reject
                                   </button>
-                                ) : (
-                                  <button
-                                    onClick={() => handleAccept(idea.idea_id)}
-                                    className=" min-w-[100px] bg-gray-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors"
-                                  >
-                                    Accept
-                                  </button>
-                                )}
-                
-                                <button
-                                  onClick={() => handleReject(idea.idea_id)}
-                                  className="btn btn-danger"
-                                >
-                                  <X size={16} /> Reject
-                                </button>
-                              </div>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {error && (
-            <div
-              className="bg-red-900 text-white px-4 py-3 rounded-lg"
-              role="alert"
-            >
-              <p className="font-medium">{error}</p>
-            </div>
-          )}
-
-          {showVersionHistory && selectedIdeaForHistory && (
-            <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-              <div className="bg-gray-800 rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] flex">
-                {/* Version History Panel */}
-                <div className="flex-1 max-w-4xl">
-                  {renderVersionHistoryModal()}
-                </div>
-
-                {/* Image Preview Panel */}
-                {selectedImage && (
-                  <div className="w-96 border-l border-gray-700 p-4 flex flex-col">
-                    <div className="flex justify-between items-center mb-4">
-                      <h3 className="text-lg font-semibold text-white">
-                        Image Preview
-                      </h3>
-                      <button
-                        onClick={() => setSelectedImage(null)}
-                        className="text-gray-400 hover:text-white"
-                      >
-                        <X size={20} />
-                      </button>
-                    </div>
-
-                    <div className="flex-1 overflow-y-auto">
-                      <div className="aspect-square rounded-lg overflow-hidden bg-gray-900 mb-4">
-                        <img
-                          src={`data:image/png;base64,${selectedImage.image_url}`}
-                          alt="Selected version"
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-
-                      {selectedImage.parameters && (
-                        <div className="space-y-2">
-                          <h4 className="font-medium text-white">Parameters</h4>
-                          <div className="text-sm text-gray-400">
-                            {Object.entries(
-                              JSON.parse(selectedImage.parameters)
-                            ).map(([key, value]) => (
-                              <div key={key} className="flex justify-between">
-                                <span className="capitalize">
-                                  {key.replace("_", " ")}:
-                                </span>
-                                <span>{value}</span>
-                              </div>
-                            ))}
+                                  <IdeaMetadata
+                                    ideaMetadata={ideaMetadata[idea.idea_id]}
+                                  />
+                                </div>
+                              </>
+                            )}
                           </div>
                         </div>
-                      )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
-                      <div className="mt-4 text-sm text-gray-400">
-                        Created:{" "}
-                        {format(new Date(selectedImage.created_at), "PPpp")}
+            {error && (
+              <div
+                className="bg-red-900 text-white px-4 py-3 rounded-lg"
+                role="alert"
+              >
+                <p className="font-medium">{error}</p>
+              </div>
+            )}
+
+            {showVersionHistory && selectedIdeaForHistory && (
+              <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+                <div className="bg-gray-800 rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] flex">
+                  {/* Version History Panel */}
+                  <div className="flex-1 max-w-4xl">
+                    {renderVersionHistoryModal()}
+                  </div>
+
+                  {/* Image Preview Panel */}
+                  {selectedImage && (
+                    <div className="w-96 border-l border-gray-700 p-4 flex flex-col">
+                      <div className="flex justify-between items-center mb-4">
+                        <h3 className="text-lg font-semibold text-white">
+                          Image Preview
+                        </h3>
+                        <button
+                          onClick={() => setSelectedImage(null)}
+                          className="text-gray-400 hover:text-white"
+                        >
+                          <X size={20} />
+                        </button>
                       </div>
 
-                      <button
-                        onClick={() => {
-                          handleRegenerateImage({
-                            idea_id: selectedIdeaForHistory.idea_id,
-                            ...JSON.parse(selectedImage.parameters),
-                          });
-                          setShowVersionHistory(false);
-                          setSelectedIdeaForHistory(null);
-                          setSelectedImage(null);
-                        }}
-                        className="w-full mt-4 btn btn-primary"
-                      >
-                        <RotateCw size={16} />
-                        Regenerate with these parameters
-                      </button>
+                      <div className="flex-1 overflow-y-auto">
+                        <div className="aspect-square rounded-lg overflow-hidden bg-gray-900 mb-4">
+                          <img
+                            src={`data:image/png;base64,${selectedImage.image_url}`}
+                            alt="Selected version"
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+
+                        {selectedImage.parameters && (
+                          <div className="space-y-2">
+                            <h4 className="font-medium text-white">
+                              Parameters
+                            </h4>
+                            <div className="text-sm text-gray-400">
+                              {Object.entries(
+                                JSON.parse(selectedImage.parameters)
+                              ).map(([key, value]) => (
+                                <div key={key} className="flex justify-between">
+                                  <span className="capitalize">
+                                    {key.replace("_", " ")}:
+                                  </span>
+                                  <span>{value}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="mt-4 text-sm text-gray-400">
+                          Created:{" "}
+                          {format(new Date(selectedImage.created_at), "PPpp")}
+                        </div>
+
+                        <button
+                          onClick={() => {
+                            handleRegenerateImage({
+                              idea_id: selectedIdeaForHistory.idea_id,
+                              ...JSON.parse(selectedImage.parameters),
+                            });
+                            setShowVersionHistory(false);
+                            setSelectedIdeaForHistory(null);
+                            setSelectedImage(null);
+                          }}
+                          className="w-full mt-4 btn btn-primary"
+                        >
+                          <RotateCw size={16} />
+                          Regenerate with these parameters
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
-            </div>
-          )}
-        </div>
-      </main>
-    </div>
+            )}
+          </div>
+        </main>
+      </div>
     </div>
   );
 };
 
 export default IdeaForm;
-

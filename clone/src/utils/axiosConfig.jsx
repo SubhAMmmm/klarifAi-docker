@@ -326,6 +326,30 @@ export const chatService = {
 };
 
 
+
+
+export const userService = {
+  getUserProfile: () => {
+    return axiosInstance.get('/user/profile/');
+  },
+  
+  changePassword: (currentPassword, newPassword) => {
+    return axiosInstance.post('/user/change-password/', {
+      current_password: currentPassword,
+      new_password: newPassword
+    });
+  },
+  
+  updateProfile: (data) => {
+    return axiosInstance.put('/user/profile/', data);
+  },
+
+  
+};
+
+
+
+
 export default axiosInstance;
 
 

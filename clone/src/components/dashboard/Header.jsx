@@ -1,27 +1,49 @@
 
+
+// export default Header;
 /* eslint-disable no-unused-vars */
-import React, { useState, useEffect } from 'react';
-import { LogOut, User } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import logo from '../../assets/Logo1.png';
-import { toast } from 'react-toastify';
-import axiosInstance from '../../utils/axiosConfig'; // Adjust the import path as needed
+import  { useState, useEffect, useRef } from "react";
+import { LogOut, User } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import logo from "../../assets/Logo1.png";
+import { toast } from "react-toastify";
+import axiosInstance from "../../utils/axiosConfig";
+import ProfileDropdown from "./ProfileDropdown"; // Adjust import path as needed
 
 const Header = () => {
   const navigate = useNavigate();
-  const [username, setUsername] = useState('');
+  const [username, setUsername] = useState("");
   const [profileImage, setProfileImage] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [userDetails, setUserDetails] = useState({
+    email: "",
+    joinedDate: "",
+  });
 
-  // Effect to retrieve and set user details on component mount
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target) &&
+        !event.target.closest(".profile-dropdown-content")
+      ) {
+        setShowDropdown(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
-        // First, check local storage
-        const storedUsername = localStorage.getItem('username');
-        const storedProfileImage = localStorage.getItem('profile_image');
+        const storedUsername = localStorage.getItem("username");
+        const storedProfileImage = localStorage.getItem("profile_image");
 
-        // Set initial values from local storage
         if (storedUsername) {
           setUsername(storedUsername);
         }
@@ -30,75 +52,73 @@ const Header = () => {
           setProfileImage(storedProfileImage);
         }
 
-        // Fetch user profile from backend to ensure up-to-date information
-        const response = await axiosInstance.get('/user/profile/');
-        
-        // Update username from backend response
+        const response = await axiosInstance.get("/user/profile/");
+
         if (response.data.username) {
           setUsername(response.data.username);
-          localStorage.setItem('username', response.data.username);
+          localStorage.setItem("username", response.data.username);
         }
 
-        // Use default avatar generation if no profile picture
-        const defaultAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(response.data.username)}&background=random`;
-        
-        // Update profile image
+        const defaultAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+          response.data.username
+        )}&background=random`;
+
         setProfileImage(response.data.profile_picture || defaultAvatar);
-        localStorage.setItem('profile_image', response.data.profile_picture || defaultAvatar);
+        localStorage.setItem(
+          "profile_image",
+          response.data.profile_picture || defaultAvatar
+        );
+
+        setUserDetails({
+          email: response.data.email || "Not available",
+          joinedDate: new Date(response.data.date_joined).toLocaleDateString(),
+        });
       } catch (error) {
-        console.error('Failed to fetch user profile:', error);
-        
-        // Fallback to stored username or default
-        const fallbackUsername = localStorage.getItem('username') || 'User';
+        console.error("Failed to fetch user profile:", error);
+
+        const fallbackUsername = localStorage.getItem("username") || "User";
         setUsername(fallbackUsername);
 
-        // Generate default avatar based on fallback username
-        const fallbackAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(fallbackUsername)}&background=random`;
+        const fallbackAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+          fallbackUsername
+        )}&background=random`;
         setProfileImage(fallbackAvatar);
-        localStorage.setItem('profile_image', fallbackAvatar);
+        localStorage.setItem("profile_image", fallbackAvatar);
 
-        // Show error toast if backend fetch fails
-        toast.error('Could not retrieve full user profile');
+        toast.error("Could not retrieve full user profile");
       } finally {
         setIsLoading(false);
       }
     };
 
-    // Check if token exists before fetching
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
     if (token) {
       fetchUserProfile();
     } else {
-      // Redirect to login if no token
-      navigate('/auth');
+      navigate("/auth");
       setIsLoading(false);
     }
   }, [navigate]);
 
   const handleLogout = () => {
     try {
-      // Clear all authentication-related local storage items
-      localStorage.removeItem('token');
-      localStorage.removeItem('username');
-      localStorage.removeItem('profile_image');
+      localStorage.removeItem("token");
+      localStorage.removeItem("username");
+      localStorage.removeItem("profile_image");
 
-      // Show logout success toast
-      toast.success('Logged out successfully');
+      toast.success("Logged out successfully");
 
-      // Redirect to authentication page
-      navigate('/auth');
+      navigate("/auth");
     } catch (error) {
-      // Handle any potential logout errors
-      console.error('Logout error:', error);
-      toast.error('Failed to log out. Please try again.');
+      console.error("Logout error:", error);
+      toast.error("Failed to log out. Please try again.");
     }
   };
 
   const handleLogoClick = () => {
-    navigate('/landing'); // Navigate to the landing page
+    navigate("/landing");
   };
 
-  // Render loading state
   if (isLoading) {
     return (
       <header className="fixed top-0 left-0 right-0 bg-gray-800 z-50">
@@ -109,73 +129,62 @@ const Header = () => {
     );
   }
 
+  const handleProfileUpdate = (newProfileImage) => {
+    console.log('Profile update triggered with:', newProfileImage); // Debug log
+    setProfileImage(newProfileImage);
+    localStorage.setItem('profile_image', newProfileImage);
+  };
+
   return (
-    <header 
-      className="
-        fixed top-0 left-0 right-0 
-        bg-black
-        z-50 shadow-md
-      "
-    >
+    <header className="fixed top-0 left-0 right-0 bg-black z-50 shadow-md">
       <div className="flex justify-between items-center px-4 py-2">
         {/* Logo and Title Section */}
         <div className="flex items-center space-x-4">
-          <img 
-            src={logo} 
-            alt="Logo" 
+          <img
+            src={logo}
+            alt="Logo"
             className="h-12 w-auto transition-transform hover:scale-105 cursor-pointer"
             onClick={handleLogoClick}
-            onKeyDown={(e) => e.key === 'Enter' && handleLogoClick()}
+            onKeyDown={(e) => e.key === "Enter" && handleLogoClick()}
             tabIndex={0}
             role="button"
           />
         </div>
-        
+
         {/* User Profile and Logout Section */}
-        <div className="flex items-center space-x-4 px-3">
+        <div className="flex items-center space-x-4 px-3" ref={dropdownRef}>
           {/* Profile Image with Fallback */}
-          <div className="relative">
+          <div
+            className="relative cursor-pointer"
+            onClick={() => setShowDropdown(!showDropdown)}
+          >
             {profileImage ? (
-              <img 
-                src={profileImage} 
-                alt="Profile" 
-                className="
-                  h-10 w-10 rounded-full 
-                  border-2 border-blue-500 
-                  object-cover
-                "
+              <img
+                src={profileImage}
+                alt="Profile"
+                className="h-10 w-10 rounded-full border-2 border-blue-500 object-cover"
               />
             ) : (
-              <div 
-                className="
-                  h-10 w-10 rounded-full 
-                  bg-gray-600 flex items-center 
-                  justify-center text-white
-                "
-              >
+              <div className="h-10 w-10 rounded-full bg-gray-600 flex items-center justify-center text-white">
                 <User size={20} />
               </div>
             )}
-            {/* Optional: Online status indicator */}
-            <span 
-              className="
-                absolute bottom-0 right-0 
-                h-3 w-3 bg-green-500 
-                rounded-full 
-                border-2 border-gray-800
-              "
+            <span className="absolute bottom-0 right-0 h-3 w-3 bg-green-500 rounded-full border-2 border-gray-800" />
+
+            <ProfileDropdown
+              profileImage={profileImage}
+              username={username}
+              userDetails={userDetails}
+              isOpen={showDropdown}
+              onProfileUpdate={handleProfileUpdate}
             />
           </div>
 
           {/* Username Display */}
-          <span 
-            className="
-              text-white font-medium 
-              max-w-[100px] truncate 
-              hover:text-blue-300 
-              transition-colors
-            "
+          <span
+            className="text-white font-medium max-w-[100px] truncate hover:text-blue-300 transition-colors cursor-pointer"
             title={username}
+            onClick={() => setShowDropdown(!showDropdown)}
           >
             {username}
           </span>
@@ -183,19 +192,10 @@ const Header = () => {
           {/* Logout Button */}
           <button
             onClick={handleLogout}
-            className="
-              text-white hover:text-red-400 
-              transition-colors group
-            "
+            className="text-white hover:text-red-400 transition-colors group"
             title="Logout"
           >
-            <LogOut 
-              className="
-                h-5 w-5 
-                group-hover:rotate-12 
-                transition-transform
-              " 
-            />
+            <LogOut className="h-5 w-5 group-hover:rotate-12 transition-transform" />
           </button>
         </div>
       </div>

@@ -1,3 +1,5 @@
+
+
 # chat/urls.py
 from django.urls import path
 from .views import (LoginView, SignupView, DocumentUploadView, 
@@ -10,6 +12,7 @@ from .views import (LoginView, SignupView, DocumentUploadView,
     UserProfileView,
     DeleteDocumentView,
     ManageConversationView,
+    ChangePasswordView,
 
     
 )
@@ -18,9 +21,10 @@ urlpatterns = [
     path('login/', LoginView.as_view(), name='login'),
     path('signup/', SignupView.as_view(), name='signup'),  # New signup endpoint
 
-    path('user/profile/', UserProfileView.as_view(), name='user-profile'),
+   path('user/profile/', UserProfileView.as_view(), name='user-profile'),
     # ... other URL patterns
-
+    path('user/change-password/', ChangePasswordView.as_view(), name='change-password'),
+    path('user/update-profile-picture/', UserProfileView.as_view(), name='update-profile-picture'),
 
     # Document handling
     path('upload-documents/', DocumentUploadView.as_view(), name='upload-documents'),

@@ -22,8 +22,9 @@ const Card = ({ title, children, onClick }) => {
         {title}
       </h3>
       <div 
-        className="text-white 
+        className="
         text-sm 
+        text-[#5ff2b6]
         leading-relaxed"
       >
         {children}

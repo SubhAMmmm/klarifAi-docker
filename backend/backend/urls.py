@@ -1,7 +1,11 @@
 
+
+
 # backend/urls.py
+from django.conf import settings
 from django.contrib import admin
 from django.urls import path, include
+from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -9,4 +13,4 @@ urlpatterns = [
     path('api/data/', include('structruedDataQuery.urls')),  # Ensure this is correct
     path('api/', include('chat.urls')),
     path('', include('topicModelling.urls')),
-]
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

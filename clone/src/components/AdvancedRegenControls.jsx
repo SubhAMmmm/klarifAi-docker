@@ -1,4 +1,4 @@
-//AdvancedRegenControls.jsx
+// AdvancedRegenControls.jsx
 import React, { useState } from 'react';
 import { Settings, RotateCw } from 'lucide-react';
 import {
@@ -18,6 +18,7 @@ const AdvancedRegenControls = ({
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [settings, setSettings] = useState({
     prompt: `${idea.product_name}: ${idea.description}`,
+    negativePrompt: '', // New field for negative prompting
     size: 768,
     steps: 30,
     guidance_scale: 7.5
@@ -47,6 +48,7 @@ const AdvancedRegenControls = ({
   const handleAdvancedRegenerate = () => {
     onRegenerate({
       description: settings.prompt,
+      negative_prompt: settings.negativePrompt, // Add negative prompt to regeneration
       idea_id: idea.idea_id,
       size: settings.size,
       steps: settings.steps,
@@ -81,12 +83,12 @@ const AdvancedRegenControls = ({
             <Settings size={16} />
           </button>
         </DialogTrigger>
-        <DialogContent className="sm:max-w-xl">
+        <DialogContent className="sm:max-w-xl max-h-[90vh]">
           <DialogHeader>
             <DialogTitle>Advanced Regeneration Settings</DialogTitle>
           </DialogHeader>
           
-          <div className="space-y-6 py-4">
+          <div className="space-y-6 py-4 overflow-y-auto max-h-[65vh] pr-4">
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-300">
                 Generation Prompt
@@ -97,6 +99,22 @@ const AdvancedRegenControls = ({
                 rows={4}
                 className="w-full p-2 bg-gray-800 border border-gray-700 rounded-md text-white"
               />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-300">
+                Negative Prompt (Elements to Avoid)
+              </label>
+              <textarea
+                value={settings.negativePrompt}
+                onChange={(e) => handleSettingChange('negativePrompt', e.target.value)}
+                rows={3}
+                placeholder="Enter elements you want to exclude from the image (e.g., blurry, low quality, watermarks)"
+                className="w-full p-2 bg-gray-800 border border-gray-700 rounded-md text-white"
+              />
+              <p className="text-xs text-gray-400 mt-1">
+                Specify elements you want to avoid in the generated image. Separate multiple elements with commas.
+              </p>
             </div>
 
             <div className="space-y-2">
@@ -141,29 +159,29 @@ const AdvancedRegenControls = ({
                 className="w-full"
               />
             </div>
+          </div>
 
-            <div className="flex justify-end gap-2 mt-4">
-              <button
-                onClick={() => setShowAdvanced(false)}
-                className="btn btn-secondary"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleAdvancedRegenerate}
-                className="btn btn-primary"
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <div className="flex items-center">
-                    <div className="loading-spinner mr-2"></div>
-                    Regenerating...
-                  </div>
-                ) : (
-                  'Regenerate'
-                )}
-              </button>
-            </div>
+          <div className="flex justify-end gap-2 mt-4">
+            <button
+              onClick={() => setShowAdvanced(false)}
+              className="btn btn-secondary"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleAdvancedRegenerate}
+              className="btn btn-primary"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <div className="flex items-center">
+                  <div className="loading-spinner mr-2"></div>
+                  Regenerating...
+                </div>
+              ) : (
+                'Regenerate'
+              )}
+            </button>
           </div>
         </DialogContent>
       </Dialog>
